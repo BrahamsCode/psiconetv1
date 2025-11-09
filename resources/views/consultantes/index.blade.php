@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Lista de Consultantes')
+@section('page-title', 'Lista de Consultantes')
 
 @section('content')
 <div class="card">
@@ -10,7 +11,7 @@
 
     @if($consultantes->isEmpty())
         <p style="text-align: center; padding: 2rem; color: #999;">
-            No hay consultantes registrados.
+            No hay consultantes registrados. 
             <a href="{{ route('consultantes.create') }}" style="color: #667eea;">¡Crea el primero!</a>
         </p>
     @else

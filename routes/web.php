@@ -1,12 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ConsultanteController;
 use App\Http\Controllers\IntervencionController;
 
-Route::get('/', function () {
-    return redirect()->route('consultantes.index');
-});
+// Dashboard
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
 // Rutas para Consultantes
 Route::resource('consultantes', ConsultanteController::class);

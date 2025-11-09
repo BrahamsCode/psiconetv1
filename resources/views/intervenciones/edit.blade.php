@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Editar Intervención')
+@section('page-title', 'Editar Intervención')
 
 @section('content')
 <div class="card">
