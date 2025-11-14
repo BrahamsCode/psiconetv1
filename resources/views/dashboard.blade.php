@@ -49,6 +49,9 @@
         <a href="{{ route('consultantes.index') }}" class="btn btn-secondary">
             👥 Ver Todos los Consultantes
         </a>
+        <a href="" class="btn btn-primary">
+            ➕ Nueva Intervención
+        </a>
     </div>
 </div>
 

@@ -302,6 +302,7 @@
                 transform: translateY(-10px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -600,6 +601,8 @@
             }
         }
 
+
+        /* wire:responsive styles */
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -686,8 +689,13 @@
 
         /* Animaciones adicionales */
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .card {
@@ -713,7 +721,8 @@
     <aside class="sidebar" id="sidebar" aria-label="Barra lateral">
         <div class="sidebar-header">
             <div class="logo-container">
-                <img src="{{ asset('assets/img/logo-psiconet.png') }}" alt="Psiconet - Especialidades Psicológicas" class="logo-img" />
+                <img src="{{ asset('assets/img/logo-psiconet.png') }}" alt="Psiconet - Especialidades Psicológicas"
+                    class="logo-img" />
             </div>
         </div>
 
@@ -722,7 +731,8 @@
             <div class="nav-section">
                 <div class="nav-section-title">Principal</div>
 
-                <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <a href="{{ route('dashboard') }}"
+                    class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <span class="nav-icon">🏠</span>
                     <span>Dashboard</span>
                 </a>
@@ -732,12 +742,14 @@
             <div class="nav-section">
                 <div class="nav-section-title">Consultantes</div>
 
-                <a href="{{ route('consultantes.index') }}" class="nav-item {{ request()->routeIs('consultantes.index') ? 'active' : '' }}">
+                <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('consultantes.index') ? 'active' : '' }}">
                     <span class="nav-icon">👥</span>
                     <span>Todos los Consultantes</span>
                 </a>
 
-                <a href="{{ route('consultantes.create') }}" class="nav-item {{ request()->routeIs('consultantes.create') ? 'active' : '' }}">
+                <a href="{{ route('consultantes.create') }}"
+                    class="nav-item {{ request()->routeIs('consultantes.create') ? 'active' : '' }}">
                     <span class="nav-icon">➕</span>
                     <span>Nuevo Consultante</span>
                 </a>
@@ -747,84 +759,45 @@
             <div class="nav-section">
                 <div class="nav-section-title">Historias Clínicas</div>
 
-                <a href="{{ route('consultantes.index') }}" class="nav-item {{ request()->routeIs('historias.show') ? 'active' : '' }}">
+                <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('historias.show') ? 'active' : '' }}">
                     <span class="nav-icon">📋</span>
                     <span>Todas las Historias</span>
                 </a>
 
-                <a href="{{ route('consultantes.index') }}" class="nav-item {{ request()->routeIs('historias.create') ? 'active' : '' }}">
+                <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('historias.create') ? 'active' : '' }}">
                     <span class="nav-icon">📝</span>
                     <span>Nueva Historia</span>
                 </a>
             </div>
 
-            <!-- SECCIÓN: INTERVENCIONES -->
+            <!-- SECCIÓN: INFORMACIÓN RELACIONADA AL CONSUMO -->
             <div class="nav-section">
-                <div class="nav-section-title">Sesiones</div>
+                <div class="nav-section-title">INFORMACIÓN RELACIONADA AL CONSUMO</div>
 
-                <a href="{{ route('consultantes.index') }}" class="nav-item {{ request()->routeIs('intervenciones.*') ? 'active' : '' }}">
-                    <span class="nav-icon">🗓️</span>
-                    <span>Todas las Sesiones</span>
-                </a>
-
-                <a href="{{ route('consultantes.index') }}" class="nav-item">
-                    <span class="nav-icon">📅</span>
-                    <span>Calendario</span>
-                </a>
-            </div>
-
-            <!-- SECCIÓN: EVALUACIONES -->
-            <div class="nav-section">
-                <div class="nav-section-title">Evaluaciones</div>
-
-                <a href="{{ route('consultantes.index') }}" class="nav-item {{ request()->routeIs('evaluaciones.*') ? 'active' : '' }}">
+                <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
                     <span class="nav-icon">🧠</span>
-                    <span>Evaluaciones Psicológicas</span>
-                </a>
-
-                <a href="{{ route('consultantes.index') }}" class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
+                    <span>Fase del consumo </span>
+                </a> <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
+                    <span class="nav-icon">⚕️</span>
+                    <span>Tratamientos recibidos</span>
+                </a> <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
                     <span class="nav-icon">⚕️</span>
                     <span>Interconsultas</span>
                 </a>
             </div>
 
-            <!-- SECCIÓN: GESTIÓN Y REPORTES -->
+            <!-- SECCIÓN: DIAGRAMA FAMILIAR -->
             <div class="nav-section">
-                <div class="nav-section-title">Gestión</div>
-
-                <a href="#" class="nav-item">
-                    <span class="nav-icon">📊</span>
-                    <span>Estadísticas</span>
-                </a>
-
-                <a href="#" class="nav-item">
-                    <span class="nav-icon">📈</span>
-                    <span>Reportes</span>
-                </a>
-
-                <a href="#" class="nav-item">
-                    <span class="nav-icon">🔍</span>
-                    <span>Búsqueda Avanzada</span>
-                </a>
-            </div>
-
-            <!-- SECCIÓN: SISTEMA -->
-            <div class="nav-section">
-                <div class="nav-section-title">Sistema</div>
-
-                <a href="#" class="nav-item">
-                    <span class="nav-icon">💾</span>
-                    <span>Respaldos</span>
-                </a>
-
-                <a href="#" class="nav-item">
-                    <span class="nav-icon">⚙️</span>
-                    <span>Configuración</span>
-                </a>
-
-                <a href="#" class="nav-item">
-                    <span class="nav-icon">ℹ️</span>
-                    <span>Acerca de</span>
+                <div class="nav-section-title">DIAGRAMA FAMILIAR</div>
+                </a> <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
+                    <span class="nav-icon">⚕️</span>
+                    <span>Interconsultas</span>
                 </a>
             </div>
         </nav>
