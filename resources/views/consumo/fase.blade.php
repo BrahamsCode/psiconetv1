@@ -216,9 +216,9 @@ function drawChart() {
         myChart.destroy();
     }
 
-    // Calcular rango de edades
-    let minAge = 10;
-    let maxAge = 70;
+    // Calcular rango de edades - CORREGIDO
+    let minAge = 0;
+    let maxAge = 80;
 
     if (consumoData.length > 0) {
         const ages = [];
@@ -228,75 +228,82 @@ function drawChart() {
         });
 
         if (ages.length > 0) {
-            minAge = Math.max(10, Math.floor(Math.min(...ages) / 5) * 5);
-            maxAge = Math.min(100, Math.ceil(Math.max(...ages) / 5) * 5);
+            // Permitir cualquier edad, no forzar mínimo de 10
+            const minEdad = Math.min(...ages);
+            const maxEdad = Math.max(...ages);
+
+            // Redondear hacia abajo y arriba en múltiplos de 5
+            minAge = Math.max(0, Math.floor(minEdad / 5) * 5);
+            maxAge = Math.min(100, Math.ceil(maxEdad / 5) * 5 + 5); // +5 para dar espacio
         }
     }
 
-    // Preparar datasets por droga
-    const datasets = [];
-    const grouped = {};
+    // Si el rango es muy pequeño, expandirlo un poco
+    if (maxAge - minAge < 10) {
+        maxAge = minAge + 10;
+    }
 
-    // Agrupar por droga
+    // Agrupar por droga y ordenar por edad
+    const grouped = {};
     consumoData.forEach(d => {
         if (!grouped[d.tipo_droga]) {
-            grouped[d.tipo_droga] = [];
+            grouped[d.tipo_droga] = {
+                nombre: d.droga_nombre,
+                puntos: []
+            };
         }
-        grouped[d.tipo_droga].push(d);
+        grouped[d.tipo_droga].puntos.push(d);
     });
 
-    // Crear dataset por cada droga
+    // Ordenar puntos por edad_inicio dentro de cada droga
+    Object.values(grouped).forEach(drug => {
+        drug.puntos.sort((a, b) => a.edad_inicio - b.edad_inicio);
+    });
+
+    // Preparar datasets
+    const datasets = [];
+
     Object.keys(grouped).forEach(drugType => {
-        const points = grouped[drugType];
+        const drug = grouped[drugType];
         const color = COLORES_DROGAS[drugType] || '#6B7280';
-        const drugName = points[0].droga_nombre;
+        const points = [];
 
-        points.forEach(point => {
-            const data = [];
-
-            // Crear puntos para la línea horizontal
-            const edadFin = point.edad_fin || maxAge;
-
-            // Punto de inicio
-            data.push({
-                x: point.edad_inicio,
-                y: POSICION_FASES[point.fase_consumo]
+        drug.puntos.forEach((punto, index) => {
+            // Punto de inicio de esta fase
+            points.push({
+                x: punto.edad_inicio,
+                y: POSICION_FASES[punto.fase_consumo],
+                label: `${punto.fase_nombre} - ${punto.edad_inicio} años`,
+                metadata: punto
             });
 
-            // Punto de fin
-            data.push({
+            // Punto de fin de esta fase
+            const edadFin = punto.edad_fin || maxAge;
+            points.push({
                 x: edadFin,
-                y: POSICION_FASES[point.fase_consumo]
+                y: POSICION_FASES[punto.fase_consumo],
+                label: `${punto.fase_nombre} - ${edadFin} años`,
+                metadata: punto
             });
+        });
 
-            datasets.push({
-                label: drugName,
-                data: data,
-                borderColor: color,
-                backgroundColor: color,
-                borderWidth: 6,
-                pointRadius: 8,
-                pointHoverRadius: 10,
-                showLine: true,
-                tension: 0,
-                fill: false,
-                segment: {
-                    borderDash: point.edad_fin ? [] : [10, 5] // Línea punteada si continúa
-                },
-                pointStyle: point.edad_fin ? 'circle' : ['circle', 'triangle'],
-                // Metadata para tooltip
-                metadata: {
-                    fase: point.fase_nombre,
-                    tiempo: point.tiempo_consumo,
-                    observaciones: point.observaciones
-                }
-            });
+        datasets.push({
+            label: drug.nombre,
+            data: points,
+            borderColor: color,
+            backgroundColor: color,
+            borderWidth: 4,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            showLine: true,
+            tension: 0,
+            fill: false
         });
     });
 
     // Configuración del gráfico
     myChart = new Chart(ctx, {
-        type: 'scatter',
+        type: 'line',
         data: {
             datasets: datasets
         },
@@ -307,7 +314,7 @@ function drawChart() {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Fase del Consumo por Edad',
+                    text: 'Fase del Consumo - Edad - Droga - Tiempo de consumo',
                     font: {
                         size: 18,
                         weight: 'bold'
@@ -319,18 +326,18 @@ function drawChart() {
                     position: 'bottom',
                     labels: {
                         font: {
-                            size: 14
+                            size: 13
                         },
-                        padding: 15,
+                        padding: 12,
                         usePointStyle: true,
                         pointStyle: 'circle'
                     }
                 },
                 tooltip: {
                     enabled: true,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
                     titleFont: {
-                        size: 14,
+                        size: 15,
                         weight: 'bold'
                     },
                     bodyFont: {
@@ -343,17 +350,20 @@ function drawChart() {
                         },
                         label: function(context) {
                             const labels = [];
-                            labels.push('Edad: ' + context.parsed.x + ' años');
+                            const point = context.raw;
 
-                            const metadata = context.dataset.metadata;
-                            if (metadata) {
-                                labels.push('Fase: ' + metadata.fase);
-                                if (metadata.tiempo) {
-                                    labels.push('Tiempo: ' + metadata.tiempo);
+                            if (point.metadata) {
+                                labels.push('Fase: ' + point.metadata.fase_nombre);
+                                labels.push('Edad: ' + Math.round(context.parsed.x) + ' años');
+
+                                if (point.metadata.tiempo_consumo) {
+                                    labels.push('Tiempo: ' + point.metadata.tiempo_consumo);
                                 }
-                                if (metadata.observaciones) {
-                                    labels.push('Obs: ' + metadata.observaciones);
+                                if (point.metadata.observaciones) {
+                                    labels.push('Obs: ' + point.metadata.observaciones);
                                 }
+                            } else {
+                                labels.push('Edad: ' + Math.round(context.parsed.x) + ' años');
                             }
 
                             return labels;
@@ -368,7 +378,7 @@ function drawChart() {
                     max: maxAge,
                     title: {
                         display: true,
-                        text: 'EDAD (años)',
+                        text: 'Edad',
                         font: {
                             size: 16,
                             weight: 'bold'
@@ -376,22 +386,32 @@ function drawChart() {
                         padding: 10
                     },
                     ticks: {
-                        stepSize: 2,
+                        stepSize: 1, // Mostrar cada año
                         font: {
                             size: 13
+                        },
+                        callback: function(value) {
+                            // Mostrar solo algunos valores para no saturar
+                            if (maxAge - minAge <= 20) {
+                                return value; // Mostrar todos
+                            } else if (value % 2 === 0) {
+                                return value; // Mostrar cada 2
+                            }
+                            return '';
                         }
                     },
                     grid: {
-                        color: '#e5e7eb'
+                        color: '#e5e7eb',
+                        lineWidth: 1
                     }
                 },
                 y: {
                     type: 'linear',
-                    min: -0.5,
-                    max: 3.5,
+                    min: -0.2,
+                    max: 3.2,
                     title: {
                         display: true,
-                        text: 'FASE DEL CONSUMO',
+                        text: 'Fase del consumo',
                         font: {
                             size: 16,
                             weight: 'bold'
@@ -402,7 +422,10 @@ function drawChart() {
                         stepSize: 1,
                         callback: function(value) {
                             const fases = ['Experimental', 'Social', 'Habitual', 'Adicto'];
-                            return fases[value] || '';
+                            if (Number.isInteger(value) && value >= 0 && value <= 3) {
+                                return fases[value] || '';
+                            }
+                            return '';
                         },
                         font: {
                             size: 14,
@@ -410,11 +433,18 @@ function drawChart() {
                         },
                         color: function(context) {
                             const fases = ['experimental', 'social', 'habitual', 'adicto'];
-                            return COLORES_FASES[fases[context.tick.value]] || '#374151';
+                            const value = context.tick.value;
+                            if (Number.isInteger(value) && value >= 0 && value <= 3) {
+                                return COLORES_FASES[fases[value]] || '#374151';
+                            }
+                            return '#374151';
                         }
                     },
                     grid: {
-                        color: '#e5e7eb'
+                        color: function(context) {
+                            return Number.isInteger(context.tick.value) ? '#e5e7eb' : 'transparent';
+                        },
+                        lineWidth: 1
                     }
                 }
             }
@@ -469,7 +499,7 @@ function updateLegend() {
         `;
 
         const label = document.createElement('span');
-        label.innerHTML = `<strong>${data.nombre}</strong> <small class="text-muted">(${data.count})</small>`;
+        label.innerHTML = `<strong>${data.nombre}</strong> <small class="text-muted">(${data.count} registro${data.count > 1 ? 's' : ''})</small>`;
         label.style.fontWeight = '600';
         label.style.color = '#374151';
 
