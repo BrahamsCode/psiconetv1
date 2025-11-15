@@ -174,6 +174,27 @@
             opacity: 1;
         }
 
+        /* Submenu for nested nav items */
+        .nav-parent {
+            cursor: pointer;
+        }
+
+        .submenu {
+            display: none;
+            margin-left: 0.5rem;
+            transition: all 0.15s ease;
+        }
+
+        .submenu.active {
+            display: block;
+        }
+
+        .submenu .nav-item {
+            padding-left: 2.25rem;
+            background: transparent;
+            border-left: none;
+        }
+
         /* --------------------
            Mobile Toggle
            -------------------- */
@@ -759,45 +780,87 @@
             <div class="nav-section">
                 <div class="nav-section-title">Historias Clínicas</div>
 
-                <a href="{{ route('consultantes.index') }}"
-                    class="nav-item {{ request()->routeIs('historias.show') ? 'active' : '' }}">
+                <a href="{{ route('historias.index') }}"
+                    class="nav-item {{ request()->routeIs('historias.index') ? 'active' : '' }}">
                     <span class="nav-icon">📋</span>
                     <span>Todas las Historias</span>
                 </a>
 
-                <a href="{{ route('consultantes.index') }}"
+                {{-- <a href="{{ route('consultantes.index') }}"
                     class="nav-item {{ request()->routeIs('historias.create') ? 'active' : '' }}">
                     <span class="nav-icon">📝</span>
                     <span>Nueva Historia</span>
-                </a>
+                </a> --}}
             </div>
 
             <!-- SECCIÓN: INFORMACIÓN RELACIONADA AL CONSUMO -->
             <div class="nav-section">
-                <div class="nav-section-title">INFORMACIÓN RELACIONADA AL CONSUMO</div>
+                <div class="nav-section-title">🧠Evaluaciones Psicológicas</div>
+
+                <div class="nav-item nav-parent {{ request()->routeIs('consumo.*') ? 'active' : '' }}"
+                    onclick="toggleSubmenu('consumo-submenu')" role="button"
+                    aria-expanded="{{ request()->routeIs('consumo.*') ? 'true' : 'false' }}">
+                    <span class="nav-icon">🧠</span>
+                    <span>Información Relacionada al Consumo</span>
+                    <span style="margin-left:auto;opacity:0.7">▾</span>
+                </div>
+
+                <div class="submenu {{ request()->routeIs('consumo.*') ? 'active' : '' }}" id="consumo-submenu"
+                    style="{{ request()->routeIs('consumo.*') ? 'display:block;' : '' }}">
+                    <a href="{{ route('consumo.index') }}"
+                        class="nav-item {{ request()->routeIs('consumo.*') ? 'active' : '' }}">
+                        <span class="nav-icon">🔁</span>
+                        <span>Fase del consumo</span>
+                    </a>
+                    <a href="" class="nav-item {{ request()->routeIs('consumo.tratamientos') ? 'active' : '' }}">
+                        <span class="nav-icon">💊</span>
+                        <span>Tratamientos recibidos</span>
+                    </a>
+                </div>
 
                 <a href="{{ route('consultantes.index') }}"
                     class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
-                    <span class="nav-icon">🧠</span>
-                    <span>Fase del consumo </span>
-                </a> <a href="{{ route('consultantes.index') }}"
-                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
                     <span class="nav-icon">⚕️</span>
-                    <span>Tratamientos recibidos</span>
-                </a> <a href="{{ route('consultantes.index') }}"
-                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
-                    <span class="nav-icon">⚕️</span>
-                    <span>Interconsultas</span>
+                    <span>Diagrama Familiar</span>
                 </a>
-            </div>
-
-            <!-- SECCIÓN: DIAGRAMA FAMILIAR -->
-            <div class="nav-section">
-                <div class="nav-section-title">DIAGRAMA FAMILIAR</div>
-                </a> <a href="{{ route('consultantes.index') }}"
+                <a href="{{ route('consultantes.index') }}"
                     class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
                     <span class="nav-icon">⚕️</span>
-                    <span>Interconsultas</span>
+                    <span>Lazos Familiares</span>
+                </a>
+
+                <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
+                    <span class="nav-icon">⚕️</span>
+                    <span>Motivo de Consulta</span>
+                </a>
+                <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
+                    <span class="nav-icon">⚕️</span>
+                    <span>Problema Actual</span>
+                </a>
+                <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
+                    <span class="nav-icon">⚕️</span>
+                    <span>Línea base y de Tratamiento</span>
+                </a>
+
+                <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
+                    <span class="nav-icon">⚕️</span>
+                    <span>Procedimiento Terapéutico</span>
+                </a>
+
+                <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
+                    <span class="nav-icon">⚕️</span>
+                    <span>Evaluación Psicológica </span>
+                </a>
+
+                <a href="{{ route('consultantes.index') }}"
+                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
+                    <span class="nav-icon">⚕️</span>
+                    <span>Interconsulta Psiquiátrica</span>
                 </a>
             </div>
         </nav>
@@ -867,14 +930,22 @@
             overlay.classList.toggle('active');
         }
 
-        // Close sidebar when clicking a nav link on mobile
-        document.querySelectorAll('.nav-item').forEach(item => {
+        // Close sidebar when clicking a nav link on mobile (only for anchor links)
+        document.querySelectorAll('a.nav-item').forEach(item => {
             item.addEventListener('click', function() {
                 if (window.innerWidth <= 768) {
                     toggleSidebar();
                 }
             });
         });
+
+        // Toggle a submenu by id
+        function toggleSubmenu(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const isActive = el.classList.toggle('active');
+            el.style.display = isActive ? 'block' : 'none';
+        }
 
         // Ensure sidebar closes when resizing back to desktop
         window.addEventListener('resize', function() {

@@ -36,67 +36,49 @@ class HistoriaPsicologicaController extends Controller
     {
         $validated = $request->validate([
             'fecha_historia' => 'required|date',
+            'genero' => 'required|string',
+            'grado_instruccion' => 'nullable|string',
+            'estado_civil' => 'nullable|string',
+            'ocupacion' => 'nullable|string|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'residencia' => 'nullable|string',
+            'religion' => 'nullable|string|max:100',
+            'natural_de' => 'nullable|string|max:255',
+            'tiempo_residencia_lima' => 'nullable|string|max:100',
+            'persona_responsable' => 'nullable|string|max:255',
+            'parentesco_responsable' => 'nullable|string|max:100',
+            'telefono_responsable' => 'nullable|string|max:20',
+            'asisten_primera_consulta' => 'nullable|string',
+            'telefono_primera_consulta' => 'nullable|string|max:20',
+            'lugar_entrevista' => 'nullable|string|max:255',
+            'terapeuta' => 'nullable|string|max:255',
+            'recomendado_por' => 'nullable|string',
+            'recomendado_detalle' => 'nullable|required_if:recomendado_por,Otros|string|max:255',
             'motivo_consulta' => 'required|string',
             'problema_actual_1' => 'nullable|string',
             'problema_actual_2' => 'nullable|string',
             'problema_actual_3' => 'nullable|string',
             'problema_actual_4' => 'nullable|string',
             'problema_actual_5' => 'nullable|string',
-            'diagrama_familiar_observaciones' => 'nullable|string',
-            'lazos_familiares' => 'nullable|array',
         ]);
 
         DB::beginTransaction();
         try {
-            // Crear historia psicológica
             $historia = new HistoriaPsicologica($validated);
             $historia->consultante_id = $consultante->id;
             $historia->numero_historia = HistoriaPsicologica::generarNumeroHistoria();
             $historia->save();
-
-            // Guardar consumo de sustancias
-            if ($request->has('consumo_sustancias')) {
-                foreach ($request->consumo_sustancias as $consumo) {
-                    if (!empty($consumo['tipo_droga'])) {
-                        $historia->consumoSustancias()->create($consumo);
-                    }
-                }
-            }
-
-            // Guardar tratamientos previos
-            if ($request->has('tratamientos_previos')) {
-                foreach ($request->tratamientos_previos as $tratamiento) {
-                    if (!empty($tratamiento['tipo_tratamiento'])) {
-                        $historia->tratamientosPrevios()->create($tratamiento);
-                    }
-                }
-            }
-
-            // Guardar conductas problema
-            if ($request->has('conductas_problema')) {
-                foreach ($request->conductas_problema as $index => $conducta) {
-                    if (!empty($conducta['conducta_problema'])) {
-                        $historia->conductasProblema()->create([
-                            'numero_orden' => $index + 1,
-                            'conducta_problema' => $conducta['conducta_problema'],
-                            'objetivo_terapeutico' => $conducta['objetivo_terapeutico'] ?? null,
-                            'procedimiento' => $conducta['procedimiento'] ?? null,
-                        ]);
-                    }
-                }
-            }
 
             DB::commit();
 
             return redirect()
                 ->route('historias.show', $historia)
                 ->with('success', 'Historia psicológica creada exitosamente.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()
                 ->withInput()
-                ->with('error', 'Error al crear la historia psicológica: ' . $e->getMessage());
+                ->with('error', 'Error al crear la historia: ' . $e->getMessage());
         }
     }
 
@@ -115,6 +97,18 @@ class HistoriaPsicologicaController extends Controller
         ]);
 
         return view('historias.show', compact('historia'));
+    }
+
+    /**
+     * Listar historias psicológicas
+     */
+    public function index()
+    {
+        $historias = HistoriaPsicologica::with('consultante')
+            ->orderByDesc('created_at')
+            ->paginate(20);
+
+        return view('historias.index', compact('historias'));
     }
 
     /**
@@ -193,7 +187,6 @@ class HistoriaPsicologicaController extends Controller
             return redirect()
                 ->route('historias.show', $historia)
                 ->with('success', 'Historia psicológica actualizada exitosamente.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()
@@ -218,7 +211,7 @@ class HistoriaPsicologicaController extends Controller
 
         // Aquí implementarías la generación del PDF
         // Podrías usar una librería como DomPDF o mPDF
-        
+
         return view('historias.pdf', compact('historia'));
     }
 }
