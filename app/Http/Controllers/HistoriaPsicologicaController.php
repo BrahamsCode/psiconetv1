@@ -11,6 +11,7 @@ use App\Models\EvaluacionPsicologica;
 use App\Models\InterconsultaPsiquiatrica;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class HistoriaPsicologicaController extends Controller
 {
@@ -209,9 +210,12 @@ class HistoriaPsicologicaController extends Controller
             'interconsultasPsiquiatricas'
         ]);
 
-        // Aquí implementarías la generación del PDF
-        // Podrías usar una librería como DomPDF o mPDF
+        $pdf = Pdf::loadView('historias.pdf', compact('historia'))
+            ->setPaper('a4', 'portrait')
+            ->setOption('defaultFont', 'DejaVu Sans');
 
-        return view('historias.pdf', compact('historia'));
+        $filename = 'Historia_' . $historia->numero_historia . '_' . now()->format('Ymd') . '.pdf';
+
+        return $pdf->download($filename);
     }
 }

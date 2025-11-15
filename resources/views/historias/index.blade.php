@@ -31,8 +31,8 @@
                     <div class="actions">
                         <a href="{{ route('historias.show', $historia) }}" class="btn btn-primary btn-sm">Ver</a>
                         <a href="{{ route('historias.edit', $historia) }}" class="btn btn-secondary btn-sm">Editar</a>
-                        <a href="{{ route('historias.pdf', $historia) }}" class="btn btn-sm"
-                            style="background:#f3f4f6;color:var(--text-primary);">PDF</a>
+                        <a href="{{ route('historias.pdf', $historia) }}" class="btn btn-primary btn-sm"
+                            style="background:#e73e3e">PDF</a>
                     </div>
                 </td>
             </tr>

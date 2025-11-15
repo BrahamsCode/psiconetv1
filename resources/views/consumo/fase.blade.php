@@ -2,20 +2,34 @@
 
 @section('title', 'Fase del Consumo')
 
-@section('page-title', 'Fase del Consumo - Edad - Droga')
+@section('page-title', 'Fase del Consumo')
 
 @section('content')
+<!-- Breadcrumb -->
+<div style="margin-bottom: 1rem;">
+    <a href="{{ route('consumo.index') }}" class="btn btn-secondary btn-sm">
+        ← Volver a Lista de Consultantes
+    </a>
+</div>
+
 <div class="card">
-    <div class="card-header">
-        Gráfico de Fase del Consumo
-        <button class="btn btn-primary btn-sm" style="float:right;" onclick="toggleFormModal()">
-            ➕ Agregar Consumo
-        </button>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong style="font-size: 1.25rem;">Gráfico de Fase del Consumo</strong>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-sm" style="background: var(--info); color: white;" onclick="exportChart()">
+                📸 Descargar Imagen
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="toggleFormModal()">
+                ➕ Agregar Consumo
+            </button>
+        </div>
     </div>
 
-    <!-- Canvas para el gráfico -->
-    <div style="padding: 2rem; background: white; overflow-x: auto;">
-        <canvas id="consumoChart" style="width: 100%; min-height: 500px;"></canvas>
+    <!-- Canvas para Chart.js -->
+    <div style="padding: 2rem; background: white;">
+        <canvas id="consumoChart" style="max-height: 500px;"></canvas>
     </div>
 </div>
 
@@ -63,7 +77,7 @@
                 <td>{{ $consumo->observaciones ?? '-' }}</td>
                 <td class="actions">
                     <button class="btn btn-sm btn-secondary"
-                            onclick='editConsumo(@json($consumo))'>
+                            onclick="editConsumo({{ $consumo->id }}, '{{ $consumo->tipo_droga }}', '{{ addslashes($consumo->droga_detalle ?? '') }}', '{{ $consumo->fase_consumo }}', {{ $consumo->edad_inicio }}, {{ $consumo->edad_fin ?? 'null' }}, '{{ addslashes($consumo->tiempo_consumo ?? '') }}', '{{ addslashes($consumo->observaciones ?? '') }}')">
                         ✏️ Editar
                     </button>
                     <form action="{{ route('consumo.destroy', $consumo) }}" method="POST" style="display:inline;">
@@ -141,12 +155,11 @@
             <div class="form-group">
                 <label for="tiempo_consumo">Tiempo de Consumo</label>
                 <input type="text" name="tiempo_consumo" id="tiempo_consumo" placeholder="Ej: 2 años, 6 meses">
-                <small class="text-muted">Opcional: puede calcularse automáticamente</small>
             </div>
 
             <div class="form-group">
                 <label for="observaciones">Observaciones</label>
-                <textarea name="observaciones" id="observaciones" rows="3" placeholder="Notas adicionales sobre el consumo..."></textarea>
+                <textarea name="observaciones" id="observaciones" rows="3" placeholder="Notas adicionales..."></textarea>
             </div>
 
             <div style="display: flex; gap: 1rem; justify-content: flex-end;">
@@ -161,274 +174,302 @@
     #formModal.active {
         display: flex !important;
     }
-
-    .badge {
-        text-transform: capitalize;
-    }
 </style>
 
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 <script>
+// Constantes del modelo
+const DROGAS = @json(App\Models\ConsumoSustancia::DROGAS);
+const FASES = @json(App\Models\ConsumoSustancia::FASES);
+const COLORES_DROGAS = @json(App\Models\ConsumoSustancia::COLORES_DROGAS);
+const COLORES_FASES = @json(App\Models\ConsumoSustancia::COLORES_FASES);
+const POSICION_FASES = @json(App\Models\ConsumoSustancia::POSICION_FASES);
+
 // Datos del servidor
-const consumoData = @json($consumos->map(function($c) {
-    return [
-        'id' => $c->id,
-        'tipo_droga' => $c->tipo_droga,
-        'droga_nombre' => $c->nombre_droga,
-        'droga_detalle' => $c->droga_detalle,
-        'fase_consumo' => $c->fase_consumo,
-        'fase_nombre' => $c->nombre_fase,
-        'edad_inicio' => $c->edad_inicio,
-        'edad_fin' => $c->edad_fin,
-        'tiempo_consumo' => $c->tiempo_consumo,
-        'observaciones' => $c->observaciones
-    ];
-}));
+const consumoData = [
+    @foreach($consumos as $consumo)
+    {
+        id: {{ $consumo->id }},
+        tipo_droga: '{{ $consumo->tipo_droga }}',
+        droga_nombre: '{{ $consumo->nombre_droga }}',
+        fase_consumo: '{{ $consumo->fase_consumo }}',
+        fase_nombre: '{{ $consumo->nombre_fase }}',
+        edad_inicio: {{ $consumo->edad_inicio }},
+        edad_fin: {{ $consumo->edad_fin ?? 'null' }},
+        tiempo_consumo: '{{ $consumo->tiempo_consumo ?? '' }}',
+        observaciones: '{{ addslashes($consumo->observaciones ?? '') }}'
+    }{{ !$loop->last ? ',' : '' }}
+    @endforeach
+];
 
 const historiaId = {{ $historia->id }};
 
-// Configuración de colores para cada tipo de droga
-const drugColors = {
-    '1': '#FF6B6B',      // OH - Rojo
-    '2': '#4ECDC4',      // TUCCI - Turquesa
-    '3': '#45B7D1',      // MH - Azul claro
-    '4': '#FFA07A',      // Tabaco - Naranja claro
-    '5': '#98D8C8',      // Cocaína - Verde agua
-    '6': '#F7DC6F',      // PBC - Amarillo
-    '7': '#BB8FCE',      // LSD - Púrpura
-    '8': '#85C1E2',      // Clonazepam - Azul cielo
-    '9': '#95A5A6'       // Otros - Gris
-};
+let myChart = null;
 
-// Mapeo de nombres de drogas para abreviar
-const drugShortNames = {
-    '1': 'OH',
-    '2': 'TUCCI',
-    '3': 'MH',
-    '4': 'Tabaco',
-    '5': 'Cocaína',
-    '6': 'PBC',
-    '7': 'LSD',
-    '8': 'Clonazepam',
-    '9': 'Otros'
-};
-
-// Fase a número (para posición Y)
-const faseToY = {
-    'experimental': 0,
-    'social': 1,
-    'habitual': 2,
-    'adicto': 3
-};
-
-// Función para dibujar el gráfico
 function drawChart() {
-    const canvas = document.getElementById('consumoChart');
-    const ctx = canvas.getContext('2d');
+    const ctx = document.getElementById('consumoChart').getContext('2d');
 
-    // Obtener rango de edades de los datos
+    // Destruir gráfico anterior si existe
+    if (myChart) {
+        myChart.destroy();
+    }
+
+    // Calcular rango de edades
     let minAge = 10;
     let maxAge = 70;
 
     if (consumoData.length > 0) {
-        const ages = consumoData.flatMap(d => {
-            const edadFin = d.edad_fin || (new Date().getFullYear() - 2000); // Año actual aproximado
-            return [d.edad_inicio, edadFin];
+        const ages = [];
+        consumoData.forEach(d => {
+            ages.push(d.edad_inicio);
+            if (d.edad_fin) ages.push(d.edad_fin);
         });
-        minAge = Math.max(10, Math.floor(Math.min(...ages) / 5) * 5);
-        maxAge = Math.min(100, Math.ceil(Math.max(...ages) / 5) * 5);
-    }
 
-    // Configuración del canvas
-    const padding = 100;
-    const width = Math.max(1000, (maxAge - minAge + 1) * 50);
-    const height = 600;
-
-    canvas.width = width;
-    canvas.height = height;
-
-    const chartWidth = width - padding * 2;
-    const chartHeight = height - padding * 2;
-
-    // Limpiar canvas
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, width, height);
-
-    // Dibujar grid
-    ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
-
-    // Líneas verticales (edades)
-    const edadStep = (maxAge - minAge) > 30 ? 5 : ((maxAge - minAge) > 15 ? 2 : 1);
-    for (let age = minAge; age <= maxAge; age += edadStep) {
-        const x = padding + ((age - minAge) / (maxAge - minAge)) * chartWidth;
-        ctx.beginPath();
-        ctx.moveTo(x, padding);
-        ctx.lineTo(x, height - padding);
-        ctx.stroke();
-
-        // Etiquetas de edad
-        ctx.fillStyle = '#6b7280';
-        ctx.font = 'bold 13px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(age, x, height - padding + 25);
-    }
-
-    // Etiqueta del eje X
-    ctx.fillStyle = '#374151';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('EDAD', width / 2, height - padding + 50);
-
-    // Líneas horizontales (fases)
-    const phases = [
-        { key: 'experimental', label: 'Experimental', color: '#9CA3AF' },
-        { key: 'social', label: 'Social', color: '#3B82F6' },
-        { key: 'habitual', label: 'Habitual', color: '#F59E0B' },
-        { key: 'adicto', label: 'Adicto', color: '#EF4444' }
-    ];
-
-    phases.forEach((phase, i) => {
-        const y = padding + (i / (phases.length - 1)) * chartHeight;
-
-        // Línea de fase con color sutil
-        ctx.strokeStyle = phase.color + '20';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(width - padding, y);
-        ctx.stroke();
-
-        // Etiquetas de fase
-        ctx.fillStyle = phase.color;
-        ctx.font = 'bold 15px sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(phase.label, padding - 15, y + 6);
-    });
-
-    // Etiqueta del eje Y
-    ctx.save();
-    ctx.translate(20, height / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillStyle = '#374151';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('FASE DEL CONSUMO', 0, 0);
-    ctx.restore();
-
-    // Dibujar líneas de consumo
-    const groupedByDrug = {};
-    consumoData.forEach(data => {
-        const drugKey = data.tipo_droga;
-        if (!groupedByDrug[drugKey]) {
-            groupedByDrug[drugKey] = [];
+        if (ages.length > 0) {
+            minAge = Math.max(10, Math.floor(Math.min(...ages) / 5) * 5);
+            maxAge = Math.min(100, Math.ceil(Math.max(...ages) / 5) * 5);
         }
-        groupedByDrug[drugKey].push(data);
+    }
+
+    // Preparar datasets por droga
+    const datasets = [];
+    const grouped = {};
+
+    // Agrupar por droga
+    consumoData.forEach(d => {
+        if (!grouped[d.tipo_droga]) {
+            grouped[d.tipo_droga] = [];
+        }
+        grouped[d.tipo_droga].push(d);
     });
 
-    Object.keys(groupedByDrug).forEach(drugType => {
-        const color = drugColors[drugType] || '#95A5A6';
-        const points = groupedByDrug[drugType];
+    // Crear dataset por cada droga
+    Object.keys(grouped).forEach(drugType => {
+        const points = grouped[drugType];
+        const color = COLORES_DROGAS[drugType] || '#6B7280';
+        const drugName = points[0].droga_nombre;
 
-        // Ordenar por edad
-        points.sort((a, b) => a.edad_inicio - b.edad_inicio);
+        points.forEach(point => {
+            const data = [];
 
-        ctx.strokeStyle = color;
-        ctx.fillStyle = color;
-        ctx.lineWidth = 4;
-        ctx.lineCap = 'round';
+            // Crear puntos para la línea horizontal
+            const edadFin = point.edad_fin || maxAge;
 
-        points.forEach((point, index) => {
-            const startX = padding + ((point.edad_inicio - minAge) / (maxAge - minAge)) * chartWidth;
-            const endX = point.edad_fin
-                ? padding + ((point.edad_fin - minAge) / (maxAge - minAge)) * chartWidth
-                : width - padding;
-            const y = padding + (faseToY[point.fase_consumo] / (phases.length - 1)) * chartHeight;
+            // Punto de inicio
+            data.push({
+                x: point.edad_inicio,
+                y: POSICION_FASES[point.fase_consumo]
+            });
 
-            // Dibujar línea
-            ctx.beginPath();
-            ctx.moveTo(startX, y);
-            ctx.lineTo(endX, y);
-            ctx.stroke();
+            // Punto de fin
+            data.push({
+                x: edadFin,
+                y: POSICION_FASES[point.fase_consumo]
+            });
 
-            // Puntos de inicio y fin
-            ctx.beginPath();
-            ctx.arc(startX, y, 8, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Borde blanco para mejor visibilidad
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 4;
-
-            if (point.edad_fin) {
-                ctx.fillStyle = color;
-                ctx.beginPath();
-                ctx.arc(endX, y, 8, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.strokeStyle = '#ffffff';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 4;
-            } else {
-                // Flecha indicando que continúa
-                ctx.fillStyle = color;
-                ctx.beginPath();
-                ctx.moveTo(endX - 10, y - 6);
-                ctx.lineTo(endX, y);
-                ctx.lineTo(endX - 10, y + 6);
-                ctx.fill();
-            }
-
-            // Etiqueta de droga sobre la línea
-            ctx.fillStyle = color;
-            ctx.font = 'bold 12px sans-serif';
-            ctx.textAlign = 'center';
-            const labelX = (startX + endX) / 2;
-            ctx.fillText(drugShortNames[drugType] || 'Otros', labelX, y - 15);
+            datasets.push({
+                label: drugName,
+                data: data,
+                borderColor: color,
+                backgroundColor: color,
+                borderWidth: 6,
+                pointRadius: 8,
+                pointHoverRadius: 10,
+                showLine: true,
+                tension: 0,
+                fill: false,
+                segment: {
+                    borderDash: point.edad_fin ? [] : [10, 5] // Línea punteada si continúa
+                },
+                pointStyle: point.edad_fin ? 'circle' : ['circle', 'triangle'],
+                // Metadata para tooltip
+                metadata: {
+                    fase: point.fase_nombre,
+                    tiempo: point.tiempo_consumo,
+                    observaciones: point.observaciones
+                }
+            });
         });
     });
 
-    // Actualizar leyenda
-    updateLegend(groupedByDrug);
+    // Configuración del gráfico
+    myChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2.5,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Fase del Consumo por Edad',
+                    font: {
+                        size: 18,
+                        weight: 'bold'
+                    },
+                    padding: 20
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        font: {
+                            size: 14
+                        },
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    padding: 12,
+                    callbacks: {
+                        title: function(context) {
+                            return context[0].dataset.label;
+                        },
+                        label: function(context) {
+                            const labels = [];
+                            labels.push('Edad: ' + context.parsed.x + ' años');
+
+                            const metadata = context.dataset.metadata;
+                            if (metadata) {
+                                labels.push('Fase: ' + metadata.fase);
+                                if (metadata.tiempo) {
+                                    labels.push('Tiempo: ' + metadata.tiempo);
+                                }
+                                if (metadata.observaciones) {
+                                    labels.push('Obs: ' + metadata.observaciones);
+                                }
+                            }
+
+                            return labels;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    min: minAge,
+                    max: maxAge,
+                    title: {
+                        display: true,
+                        text: 'EDAD (años)',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        padding: 10
+                    },
+                    ticks: {
+                        stepSize: 2,
+                        font: {
+                            size: 13
+                        }
+                    },
+                    grid: {
+                        color: '#e5e7eb'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    min: -0.5,
+                    max: 3.5,
+                    title: {
+                        display: true,
+                        text: 'FASE DEL CONSUMO',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        padding: 10
+                    },
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value) {
+                            const fases = ['Experimental', 'Social', 'Habitual', 'Adicto'];
+                            return fases[value] || '';
+                        },
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        color: function(context) {
+                            const fases = ['experimental', 'social', 'habitual', 'adicto'];
+                            return COLORES_FASES[fases[context.tick.value]] || '#374151';
+                        }
+                    },
+                    grid: {
+                        color: '#e5e7eb'
+                    }
+                }
+            }
+        }
+    });
+
+    updateLegend();
 }
 
-// Actualizar leyenda de drogas
-function updateLegend(groupedByDrug) {
+function updateLegend() {
     const legend = document.getElementById('drugLegend');
     legend.innerHTML = '';
 
-    if (Object.keys(groupedByDrug).length === 0) {
+    if (consumoData.length === 0) {
         legend.innerHTML = '<p class="text-muted">No hay drogas registradas aún.</p>';
         return;
     }
 
-    Object.keys(groupedByDrug).forEach(drugType => {
-        const color = drugColors[drugType] || '#95A5A6';
-        const drugName = consumoData.find(d => d.tipo_droga === drugType)?.droga_nombre || 'Desconocido';
+    // Agrupar por tipo de droga
+    const grouped = {};
+    consumoData.forEach(d => {
+        if (!grouped[d.tipo_droga]) {
+            grouped[d.tipo_droga] = {
+                nombre: d.droga_nombre,
+                count: 0
+            };
+        }
+        grouped[d.tipo_droga].count++;
+    });
+
+    Object.keys(grouped).forEach(drugType => {
+        const color = COLORES_DROGAS[drugType] || '#6B7280';
+        const data = grouped[drugType];
 
         const item = document.createElement('div');
-        item.style.display = 'flex';
-        item.style.alignItems = 'center';
-        item.style.gap = '0.5rem';
-        item.style.padding = '0.5rem 1rem';
-        item.style.backgroundColor = color + '15';
-        item.style.borderRadius = '8px';
-        item.style.border = `2px solid ${color}`;
+        item.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            background: ${color}15;
+            border-radius: 10px;
+            border: 2px solid ${color};
+        `;
 
         const colorBox = document.createElement('div');
-        colorBox.style.width = '24px';
-        colorBox.style.height = '24px';
-        colorBox.style.backgroundColor = color;
-        colorBox.style.borderRadius = '6px';
-        colorBox.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+        colorBox.style.cssText = `
+            width: 28px;
+            height: 28px;
+            background: ${color};
+            border-radius: 6px;
+        `;
 
         const label = document.createElement('span');
-        label.textContent = drugName;
+        label.innerHTML = `<strong>${data.nombre}</strong> <small class="text-muted">(${data.count})</small>`;
         label.style.fontWeight = '600';
         label.style.color = '#374151';
 
@@ -438,20 +479,23 @@ function updateLegend(groupedByDrug) {
     });
 }
 
-// Modal functions
+function exportChart() {
+    const link = document.createElement('a');
+    link.download = 'fase-consumo-{{ $historia->numero_historia }}.png';
+    link.href = myChart.toBase64Image();
+    link.click();
+}
+
 function toggleFormModal() {
     const modal = document.getElementById('formModal');
     modal.classList.toggle('active');
-
-    if (!modal.classList.contains('active')) {
-        resetForm();
-    }
+    if (!modal.classList.contains('active')) resetForm();
 }
 
 function resetForm() {
     document.getElementById('consumoForm').reset();
     document.getElementById('formMethod').value = 'POST';
-    document.getElementById('consumoForm').action = `/historias/${historiaId}/consumo`;
+    document.getElementById('consumoForm').action = '/historias/' + historiaId + '/consumo';
     document.getElementById('modalTitle').textContent = 'Agregar Consumo';
     document.getElementById('droga_detalle_group').style.display = 'none';
     document.getElementById('droga_detalle').removeAttribute('required');
@@ -462,7 +506,7 @@ function toggleDrogaDetalle() {
     const drogaDetalleGroup = document.getElementById('droga_detalle_group');
     const drogaDetalleInput = document.getElementById('droga_detalle');
 
-    if (tipoDroga === '9') { // "Otros"
+    if (tipoDroga === '9') {
         drogaDetalleGroup.style.display = 'block';
         drogaDetalleInput.setAttribute('required', 'required');
     } else {
@@ -472,25 +516,27 @@ function toggleDrogaDetalle() {
     }
 }
 
-function editConsumo(consumo) {
+function editConsumo(id, tipoDroga, drogaDetalle, faseConsumo, edadInicio, edadFin, tiempoConsumo, observaciones) {
     document.getElementById('modalTitle').textContent = 'Editar Consumo';
     document.getElementById('formMethod').value = 'PUT';
-    document.getElementById('consumoForm').action = `/consumo/${consumo.id}`;
-
-    document.getElementById('tipo_droga').value = consumo.tipo_droga;
+    document.getElementById('consumoForm').action = '/consumo/' + id;
+    document.getElementById('tipo_droga').value = tipoDroga;
     toggleDrogaDetalle();
-    document.getElementById('droga_detalle').value = consumo.droga_detalle || '';
-    document.getElementById('fase_consumo').value = consumo.fase_consumo;
-    document.getElementById('edad_inicio').value = consumo.edad_inicio;
-    document.getElementById('edad_fin').value = consumo.edad_fin || '';
-    document.getElementById('tiempo_consumo').value = consumo.tiempo_consumo || '';
-    document.getElementById('observaciones').value = consumo.observaciones || '';
-
+    document.getElementById('droga_detalle').value = drogaDetalle || '';
+    document.getElementById('fase_consumo').value = faseConsumo;
+    document.getElementById('edad_inicio').value = edadInicio;
+    document.getElementById('edad_fin').value = edadFin !== null ? edadFin : '';
+    document.getElementById('tiempo_consumo').value = tiempoConsumo || '';
+    document.getElementById('observaciones').value = observaciones || '';
     toggleFormModal();
 }
 
-// Dibujar al cargar
+// Inicializar
 window.addEventListener('load', drawChart);
-window.addEventListener('resize', drawChart);
+window.addEventListener('resize', function() {
+    if (myChart) {
+        myChart.resize();
+    }
+});
 </script>
 @endsection
