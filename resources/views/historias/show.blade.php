@@ -17,9 +17,9 @@
     </div>
 
     <div style="display: flex; gap: 0.5rem;">
-        <a href="{{ route('consultantes.show', $historia->consultante) }}" class="btn btn-secondary btn-sm">
+        {{-- <a href="{{ route('historias.index') }}" class="btn btn-secondary btn-sm">
             ← Volver al Consultante
-        </a>
+        </a> --}}
         <a href="{{ route('historias.edit', $historia) }}" class="btn btn-primary btn-sm">
             ✏️ Editar Historia
         </a>

@@ -16,6 +16,8 @@
     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
         <div>
             <strong style="font-size: 1.25rem;">Gráfico de Fase del Consumo</strong>
+            <br>
+            <small class="text-muted">Las fases progresan automáticamente según tiempo de consumo</small>
         </div>
         <div style="display: flex; gap: 0.5rem;">
             <button class="btn btn-sm" style="background: var(--info); color: white;" onclick="exportChart()">
@@ -29,7 +31,30 @@
 
     <!-- Canvas para Chart.js -->
     <div style="padding: 2rem; background: white;">
-        <canvas id="consumoChart" style="max-height: 500px;"></canvas>
+        <canvas id="consumoChart" style="max-height: 550px;"></canvas>
+    </div>
+</div>
+
+<!-- Información de Progresión -->
+<div class="card">
+    <div class="card-header">ℹ️ Cómo se Calcula la Progresión de Fases</div>
+    <div style="padding: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div style="padding: 1rem; background: var(--primary-light); border-radius: 8px;">
+            <strong>🟢 Experimental</strong><br>
+            <small>0 - 1 año de consumo</small>
+        </div>
+        <div style="padding: 1rem; background: var(--info-light); border-radius: 8px;">
+            <strong>🔵 Social</strong><br>
+            <small>1 - 2 años de consumo</small>
+        </div>
+        <div style="padding: 1rem; background: var(--warning-light); border-radius: 8px;">
+            <strong>🟡 Habitual</strong><br>
+            <small>2 - 4 años de consumo</small>
+        </div>
+        <div style="padding: 1rem; background: var(--error-light); border-radius: 8px;">
+            <strong>🔴 Adicto</strong><br>
+            <small>4+ años de consumo</small>
+        </div>
     </div>
 </div>
 
@@ -50,10 +75,10 @@
         <thead>
             <tr>
                 <th>Sustancia</th>
-                <th>Fase</th>
+                <th>Fase Inicial</th>
                 <th>Edad Inicio</th>
                 <th>Edad Fin</th>
-                <th>Tiempo Consumo</th>
+                <th>Años de Consumo</th>
                 <th>Observaciones</th>
                 <th>Acciones</th>
             </tr>
@@ -73,7 +98,14 @@
                 </td>
                 <td>{{ $consumo->edad_inicio }} años</td>
                 <td>{{ $consumo->edad_fin ? $consumo->edad_fin . ' años' : 'Actualidad' }}</td>
-                <td>{{ $consumo->tiempo_consumo ?? '-' }}</td>
+                <td>
+                    @php
+                        $aniosConsumo = $consumo->edad_fin
+                            ? ($consumo->edad_fin - $consumo->edad_inicio)
+                            : '(en curso)';
+                    @endphp
+                    {{ is_numeric($aniosConsumo) ? $aniosConsumo . ' años' : $aniosConsumo }}
+                </td>
                 <td>{{ $consumo->observaciones ?? '-' }}</td>
                 <td class="actions">
                     <button class="btn btn-sm btn-secondary"
@@ -130,24 +162,25 @@
             </div>
 
             <div class="form-group">
-                <label for="fase_consumo">Fase de Consumo *</label>
+                <label for="fase_consumo">Fase de Consumo Inicial *</label>
                 <select name="fase_consumo" id="fase_consumo" required>
                     <option value="">Seleccionar...</option>
                     @foreach(App\Models\ConsumoSustancia::FASES as $key => $nombre)
                         <option value="{{ $key }}">{{ $nombre }}</option>
                     @endforeach
                 </select>
+                <small class="text-muted">El gráfico mostrará la progresión automática según el tiempo</small>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div class="form-group">
                     <label for="edad_inicio">Edad de Inicio *</label>
-                    <input type="number" name="edad_inicio" id="edad_inicio" min="1" max="100" required>
+                    <input type="number" name="edad_inicio" id="edad_inicio" min="0" max="100" required>
                 </div>
 
                 <div class="form-group">
                     <label for="edad_fin">Edad de Fin</label>
-                    <input type="number" name="edad_fin" id="edad_fin" min="1" max="100">
+                    <input type="number" name="edad_fin" id="edad_fin" min="0" max="100">
                     <small class="text-muted">Dejar vacío si continúa</small>
                 </div>
             </div>
@@ -205,18 +238,103 @@ const consumoData = [
 ];
 
 const historiaId = {{ $historia->id }};
-
 let myChart = null;
+
+// FUNCIÓN CLAVE: Calcular progresión automática de fases basada en años de consumo
+function calcularProgresionFases(edadInicio, edadFin, faseInicial) {
+    const puntos = [];
+    const edadFinal = edadFin || (edadInicio + 10); // Si no hay fin, proyectar 10 años
+    const aniosConsumo = edadFinal - edadInicio;
+
+    // Definir rangos de años para cada fase
+    const RANGOS_FASES = {
+        experimental: { min: 0, max: 1 },
+        social: { min: 1, max: 2 },
+        habitual: { min: 2, max: 4 },
+        adicto: { min: 4, max: 999 }
+    };
+
+    // Orden de progresión
+    const ordenFases = ['experimental', 'social', 'habitual', 'adicto'];
+    const faseInicialIndex = ordenFases.indexOf(faseInicial);
+
+    // Generar puntos de progresión
+    let edadActual = edadInicio;
+    let aniosAcumulados = 0;
+
+    for (let i = faseInicialIndex; i < ordenFases.length; i++) {
+        const fase = ordenFases[i];
+        const rango = RANGOS_FASES[fase];
+
+        // Calcular cuánto tiempo pasa en esta fase
+        let tiempoEnFase;
+        if (i === ordenFases.length - 1) {
+            // Última fase: todo el tiempo restante
+            tiempoEnFase = aniosConsumo - aniosAcumulados;
+        } else {
+            // Otras fases: máximo del rango o tiempo restante
+            tiempoEnFase = Math.min(rango.max - rango.min, aniosConsumo - aniosAcumulados);
+        }
+
+        if (tiempoEnFase <= 0) break;
+
+        // Punto de inicio de esta fase
+        puntos.push({
+            edad: edadActual,
+            fase: fase,
+            aniosEnFase: 0
+        });
+
+        // Punto de fin de esta fase
+        const edadFinFase = edadActual + tiempoEnFase;
+        if (edadFinFase <= edadFinal) {
+            puntos.push({
+                edad: edadFinFase,
+                fase: fase,
+                aniosEnFase: tiempoEnFase
+            });
+        }
+
+        edadActual = edadFinFase;
+        aniosAcumulados += tiempoEnFase;
+
+        if (edadActual >= edadFinal) break;
+    }
+
+    return puntos;
+}
+
+// Detectar superposiciones y calcular offsets
+function calcularOffsets(allPoints) {
+    const offsets = {};
+
+    allPoints.forEach((punto, index) => {
+        let offset = 0;
+
+        // Comparar con puntos anteriores
+        for (let i = 0; i < index; i++) {
+            const otroPunto = allPoints[i];
+
+            // Si están en la misma edad (±0.5 años) y misma fase
+            if (Math.abs(punto.edad - otroPunto.edad) < 0.5 && punto.fase === otroPunto.fase) {
+                offset += 0.08;
+            }
+        }
+
+        offsets[index] = offset;
+    });
+
+    return offsets;
+}
 
 function drawChart() {
     const ctx = document.getElementById('consumoChart').getContext('2d');
 
-    // Destruir gráfico anterior si existe
     if (myChart) {
         myChart.destroy();
     }
 
-    // Calcular rango de edades - CORREGIDO
+    // Calcular rango de edades
     let minAge = 0;
     let maxAge = 80;
 
@@ -228,144 +346,137 @@ function drawChart() {
         });
 
         if (ages.length > 0) {
-            // Permitir cualquier edad, no forzar mínimo de 10
             const minEdad = Math.min(...ages);
             const maxEdad = Math.max(...ages);
-
-            // Redondear hacia abajo y arriba en múltiplos de 5
             minAge = Math.max(0, Math.floor(minEdad / 5) * 5);
-            maxAge = Math.min(100, Math.ceil(maxEdad / 5) * 5 + 5); // +5 para dar espacio
+            maxAge = Math.min(100, Math.ceil(maxEdad / 5) * 5 + 5);
         }
     }
 
-    // Si el rango es muy pequeño, expandirlo un poco
     if (maxAge - minAge < 10) {
         maxAge = minAge + 10;
     }
 
-    // Agrupar por droga y ordenar por edad
-    const grouped = {};
-    consumoData.forEach(d => {
-        if (!grouped[d.tipo_droga]) {
-            grouped[d.tipo_droga] = {
-                nombre: d.droga_nombre,
-                puntos: []
-            };
-        }
-        grouped[d.tipo_droga].puntos.push(d);
-    });
-
-    // Ordenar puntos por edad_inicio dentro de cada droga
-    Object.values(grouped).forEach(drug => {
-        drug.puntos.sort((a, b) => a.edad_inicio - b.edad_inicio);
-    });
-
-    // Preparar datasets
+    // Preparar datasets con progresión automática
     const datasets = [];
+    const allPoints = [];
 
-    Object.keys(grouped).forEach(drugType => {
-        const drug = grouped[drugType];
-        const color = COLORES_DROGAS[drugType] || '#6B7280';
-        const points = [];
+    consumoData.forEach((droga, drugIndex) => {
+        const color = COLORES_DROGAS[droga.tipo_droga] || '#6B7280';
 
-        drug.puntos.forEach((punto, index) => {
-            // Punto de inicio de esta fase
-            points.push({
-                x: punto.edad_inicio,
-                y: POSICION_FASES[punto.fase_consumo],
-                label: `${punto.fase_nombre} - ${punto.edad_inicio} años`,
-                metadata: punto
-            });
+        // Calcular progresión de fases
+        const puntosProgresion = calcularProgresionFases(
+            droga.edad_inicio,
+            droga.edad_fin,
+            droga.fase_consumo
+        );
 
-            // Punto de fin de esta fase
-            const edadFin = punto.edad_fin || maxAge;
-            points.push({
-                x: edadFin,
-                y: POSICION_FASES[punto.fase_consumo],
-                label: `${punto.fase_nombre} - ${edadFin} años`,
-                metadata: punto
+        // Guardar puntos para cálculo de offsets
+        puntosProgresion.forEach(p => {
+            allPoints.push({
+                ...p,
+                drugIndex: drugIndex,
+                droga: droga
             });
         });
+    });
+
+    // Calcular offsets
+    const offsets = calcularOffsets(allPoints);
+
+    // Agrupar puntos por droga
+    const pointsByDrug = {};
+    allPoints.forEach((punto, index) => {
+        const drugIdx = punto.drugIndex;
+        if (!pointsByDrug[drugIdx]) {
+            pointsByDrug[drugIdx] = [];
+        }
+
+        const offset = offsets[index] || 0;
+        pointsByDrug[drugIdx].push({
+            x: punto.edad,
+            y: POSICION_FASES[punto.fase] + offset,
+            metadata: {
+                droga: punto.droga.droga_nombre,
+                fase: FASES[punto.fase],
+                edad: punto.edad,
+                aniosEnFase: punto.aniosEnFase,
+                observaciones: punto.droga.observaciones
+            }
+        });
+    });
+
+    // Crear datasets
+    Object.keys(pointsByDrug).forEach(drugIdx => {
+        const droga = consumoData[drugIdx];
+        const color = COLORES_DROGAS[droga.tipo_droga] || '#6B7280';
 
         datasets.push({
-            label: drug.nombre,
-            data: points,
+            label: droga.droga_nombre,
+            data: pointsByDrug[drugIdx],
             borderColor: color,
             backgroundColor: color,
             borderWidth: 4,
-            pointRadius: 6,
-            pointHoverRadius: 8,
+            pointRadius: 5,
+            pointHoverRadius: 7,
             showLine: true,
-            tension: 0,
-            fill: false
+            tension: 0.1,
+            fill: false,
+            segment: {
+                borderDash: ctx => {
+                    // Línea punteada si no tiene edad_fin
+                    if (!droga.edad_fin && ctx.p1DataIndex === pointsByDrug[drugIdx].length - 1) {
+                        return [8, 4];
+                    }
+                    return [];
+                }
+            }
         });
     });
 
     // Configuración del gráfico
     myChart = new Chart(ctx, {
         type: 'line',
-        data: {
-            datasets: datasets
-        },
+        data: { datasets: datasets },
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            aspectRatio: 2.5,
+            aspectRatio: 2.3,
             plugins: {
                 title: {
                     display: true,
                     text: 'Fase del Consumo - Edad - Droga - Tiempo de consumo',
-                    font: {
-                        size: 18,
-                        weight: 'bold'
-                    },
+                    font: { size: 18, weight: 'bold' },
                     padding: 20
                 },
                 legend: {
                     display: true,
                     position: 'bottom',
                     labels: {
-                        font: {
-                            size: 13
-                        },
+                        font: { size: 13 },
                         padding: 12,
-                        usePointStyle: true,
-                        pointStyle: 'circle'
+                        usePointStyle: true
                     }
                 },
                 tooltip: {
                     enabled: true,
                     backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                    titleFont: {
-                        size: 15,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
+                    titleFont: { size: 15, weight: 'bold' },
+                    bodyFont: { size: 13 },
                     padding: 12,
                     callbacks: {
-                        title: function(context) {
-                            return context[0].dataset.label;
-                        },
-                        label: function(context) {
+                        title: ctx => ctx[0].raw.metadata.droga,
+                        label: ctx => {
+                            const meta = ctx.raw.metadata;
                             const labels = [];
-                            const point = context.raw;
-
-                            if (point.metadata) {
-                                labels.push('Fase: ' + point.metadata.fase_nombre);
-                                labels.push('Edad: ' + Math.round(context.parsed.x) + ' años');
-
-                                if (point.metadata.tiempo_consumo) {
-                                    labels.push('Tiempo: ' + point.metadata.tiempo_consumo);
-                                }
-                                if (point.metadata.observaciones) {
-                                    labels.push('Obs: ' + point.metadata.observaciones);
-                                }
-                            } else {
-                                labels.push('Edad: ' + Math.round(context.parsed.x) + ' años');
+                            labels.push('Fase: ' + meta.fase);
+                            labels.push('Edad: ' + Math.round(meta.edad) + ' años');
+                            if (meta.aniosEnFase > 0) {
+                                labels.push('Años en esta fase: ' + meta.aniosEnFase.toFixed(1));
                             }
-
+                            if (meta.observaciones) {
+                                labels.push('Obs: ' + meta.observaciones);
+                            }
                             return labels;
                         }
                     }
@@ -379,72 +490,51 @@ function drawChart() {
                     title: {
                         display: true,
                         text: 'Edad',
-                        font: {
-                            size: 16,
-                            weight: 'bold'
-                        },
-                        padding: 10
-                    },
-                    ticks: {
-                        stepSize: 1, // Mostrar cada año
-                        font: {
-                            size: 13
-                        },
-                        callback: function(value) {
-                            // Mostrar solo algunos valores para no saturar
-                            if (maxAge - minAge <= 20) {
-                                return value; // Mostrar todos
-                            } else if (value % 2 === 0) {
-                                return value; // Mostrar cada 2
-                            }
-                            return '';
-                        }
-                    },
-                    grid: {
-                        color: '#e5e7eb',
-                        lineWidth: 1
-                    }
-                },
-                y: {
-                    type: 'linear',
-                    min: -0.2,
-                    max: 3.2,
-                    title: {
-                        display: true,
-                        text: 'Fase del consumo',
-                        font: {
-                            size: 16,
-                            weight: 'bold'
-                        },
+                        font: { size: 16, weight: 'bold' },
                         padding: 10
                     },
                     ticks: {
                         stepSize: 1,
-                        callback: function(value) {
+                        font: { size: 13 },
+                        callback: value => {
+                            if (maxAge - minAge <= 20) return value;
+                            else if (value % 2 === 0) return value;
+                            return '';
+                        }
+                    },
+                    grid: { color: '#e5e7eb' }
+                },
+                y: {
+                    type: 'linear',
+                    min: -0.3,
+                    max: 3.5,
+                    title: {
+                        display: true,
+                        text: 'Fase del consumo',
+                        font: { size: 16, weight: 'bold' },
+                        padding: 10
+                    },
+                    ticks: {
+                        stepSize: 1,
+                        callback: value => {
                             const fases = ['Experimental', 'Social', 'Habitual', 'Adicto'];
                             if (Number.isInteger(value) && value >= 0 && value <= 3) {
-                                return fases[value] || '';
+                                return fases[value];
                             }
                             return '';
                         },
-                        font: {
-                            size: 14,
-                            weight: 'bold'
-                        },
-                        color: function(context) {
+                        font: { size: 14, weight: 'bold' },
+                        color: ctx => {
                             const fases = ['experimental', 'social', 'habitual', 'adicto'];
-                            const value = context.tick.value;
+                            const value = ctx.tick.value;
                             if (Number.isInteger(value) && value >= 0 && value <= 3) {
-                                return COLORES_FASES[fases[value]] || '#374151';
+                                return COLORES_FASES[fases[value]];
                             }
                             return '#374151';
                         }
                     },
                     grid: {
-                        color: function(context) {
-                            return Number.isInteger(context.tick.value) ? '#e5e7eb' : 'transparent';
-                        },
-                        lineWidth: 1
+                        color: ctx => Number.isInteger(ctx.tick.value) ? '#e5e7eb' : 'transparent'
                     }
                 }
             }
@@ -463,14 +553,10 @@ function updateLegend() {
         return;
     }
 
-    // Agrupar por tipo de droga
     const grouped = {};
     consumoData.forEach(d => {
         if (!grouped[d.tipo_droga]) {
-            grouped[d.tipo_droga] = {
-                nombre: d.droga_nombre,
-                count: 0
-            };
+            grouped[d.tipo_droga] = { nombre: d.droga_nombre, count: 0 };
         }
         grouped[d.tipo_droga].count++;
     });
@@ -481,25 +567,19 @@ function updateLegend() {
 
         const item = document.createElement('div');
         item.style.cssText = `
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1.25rem;
-            background: ${color}15;
-            border-radius: 10px;
-            border: 2px solid ${color};
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem 1.25rem; background: ${color}15;
+            border-radius: 10px; border: 2px solid ${color};
         `;
 
         const colorBox = document.createElement('div');
         colorBox.style.cssText = `
-            width: 28px;
-            height: 28px;
-            background: ${color};
+            width: 28px; height: 28px; background: ${color};
             border-radius: 6px;
         `;
 
         const label = document.createElement('span');
-        label.innerHTML = `<strong>${data.nombre}</strong> <small class="text-muted">(${data.count} registro${data.count > 1 ? 's' : ''})</small>`;
+        label.innerHTML = `<strong>${data.nombre}</strong> <small class="text-muted">(${data.count})</small>`;
         label.style.fontWeight = '600';
         label.style.color = '#374151';
 
@@ -561,12 +641,7 @@ function editConsumo(id, tipoDroga, drogaDetalle, faseConsumo, edadInicio, edadF
     toggleFormModal();
 }
 
-// Inicializar
 window.addEventListener('load', drawChart);
-window.addEventListener('resize', function() {
-    if (myChart) {
-        myChart.resize();
-    }
-});
+window.addEventListener('resize', () => myChart && myChart.resize());
 </script>
 @endsection

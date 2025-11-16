@@ -297,12 +297,12 @@
     </div>
 
     <!-- B) MOTIVO DE CONSULTA -->
-    <div class="section">
+    {{-- <div class="section">
         <div class="section-title">B) MOTIVO DE CONSULTA</div>
         <div class="section-content">
             <p class="text-content">{{ $historia->motivo_consulta ?? 'No especificado' }}</p>
         </div>
-    </div>
+    </div> --}}
 
     <!-- C) PROBLEMA ACTUAL -->
     @if($historia->problemas_actuales && count($historia->problemas_actuales) > 0)

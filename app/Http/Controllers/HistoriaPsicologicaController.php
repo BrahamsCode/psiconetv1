@@ -55,12 +55,7 @@ class HistoriaPsicologicaController extends Controller
             'terapeuta' => 'nullable|string|max:255',
             'recomendado_por' => 'nullable|string',
             'recomendado_detalle' => 'nullable|required_if:recomendado_por,Otros|string|max:255',
-            'motivo_consulta' => 'required|string',
-            'problema_actual_1' => 'nullable|string',
-            'problema_actual_2' => 'nullable|string',
-            'problema_actual_3' => 'nullable|string',
-            'problema_actual_4' => 'nullable|string',
-            'problema_actual_5' => 'nullable|string',
+
         ]);
 
         DB::beginTransaction();
@@ -117,12 +112,7 @@ class HistoriaPsicologicaController extends Controller
      */
     public function edit(HistoriaPsicologica $historia)
     {
-        $historia->load([
-            'consultante',
-            'consumoSustancias',
-            'tratamientosPrevios',
-            'conductasProblema'
-        ]);
+        $historia->load('consultante');
 
         return view('historias.edit', compact('historia'));
     }
@@ -134,54 +124,29 @@ class HistoriaPsicologicaController extends Controller
     {
         $validated = $request->validate([
             'fecha_historia' => 'required|date',
-            'motivo_consulta' => 'required|string',
-            'problema_actual_1' => 'nullable|string',
-            'problema_actual_2' => 'nullable|string',
-            'problema_actual_3' => 'nullable|string',
-            'problema_actual_4' => 'nullable|string',
-            'problema_actual_5' => 'nullable|string',
-            'diagrama_familiar_observaciones' => 'nullable|string',
-            'lazos_familiares' => 'nullable|array',
+            'genero' => 'required|string',
+            'grado_instruccion' => 'nullable|string',
+            'estado_civil' => 'nullable|string',
+            'ocupacion' => 'nullable|string|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'residencia' => 'nullable|string',
+            'religion' => 'nullable|string|max:100',
+            'natural_de' => 'nullable|string|max:255',
+            'tiempo_residencia_lima' => 'nullable|string|max:100',
+            'persona_responsable' => 'nullable|string|max:255',
+            'parentesco_responsable' => 'nullable|string|max:100',
+            'telefono_responsable' => 'nullable|string|max:20',
+            'asisten_primera_consulta' => 'nullable|string',
+            'telefono_primera_consulta' => 'nullable|string|max:20',
+            'lugar_entrevista' => 'nullable|string|max:255',
+            'terapeuta' => 'nullable|string|max:255',
+            'recomendado_por' => 'nullable|string',
+            'recomendado_detalle' => 'nullable|required_if:recomendado_por,Otros|string|max:255',
         ]);
 
         DB::beginTransaction();
         try {
             $historia->update($validated);
-
-            // Actualizar consumo de sustancias (eliminar y recrear)
-            if ($request->has('consumo_sustancias')) {
-                $historia->consumoSustancias()->delete();
-                foreach ($request->consumo_sustancias as $consumo) {
-                    if (!empty($consumo['tipo_droga'])) {
-                        $historia->consumoSustancias()->create($consumo);
-                    }
-                }
-            }
-
-            // Actualizar tratamientos previos
-            if ($request->has('tratamientos_previos')) {
-                $historia->tratamientosPrevios()->delete();
-                foreach ($request->tratamientos_previos as $tratamiento) {
-                    if (!empty($tratamiento['tipo_tratamiento'])) {
-                        $historia->tratamientosPrevios()->create($tratamiento);
-                    }
-                }
-            }
-
-            // Actualizar conductas problema
-            if ($request->has('conductas_problema')) {
-                $historia->conductasProblema()->delete();
-                foreach ($request->conductas_problema as $index => $conducta) {
-                    if (!empty($conducta['conducta_problema'])) {
-                        $historia->conductasProblema()->create([
-                            'numero_orden' => $index + 1,
-                            'conducta_problema' => $conducta['conducta_problema'],
-                            'objetivo_terapeutico' => $conducta['objetivo_terapeutico'] ?? null,
-                            'procedimiento' => $conducta['procedimiento'] ?? null,
-                        ]);
-                    }
-                }
-            }
 
             DB::commit();
 
@@ -192,8 +157,20 @@ class HistoriaPsicologicaController extends Controller
             DB::rollBack();
             return back()
                 ->withInput()
-                ->with('error', 'Error al actualizar la historia psicológica: ' . $e->getMessage());
+                ->with('error', 'Error al actualizar la historia: ' . $e->getMessage());
         }
+    }
+
+    /*
+    *Mostrar lista de consultantes sin historia psicológica
+     */
+    public function selectConsultante()
+    {
+        $consultantes = Consultante::whereDoesntHave('historiaPsicologica')
+            ->orderBy('nombres')
+            ->get();
+
+        return view('historias.selectConsultante', compact('consultantes'));
     }
 
     /**

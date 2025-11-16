@@ -10,14 +10,16 @@
 
     <!-- Información del Consultante -->
     <div class="card">
-        <div class="card-header">Información del Consultante</div>
-        <div style="padding: 1rem; background: var(--primary-light);">
-            <strong style="font-size: 1.1rem; color: var(--primary-dark);">
-                {{ $consultante->nombre }}
-            </strong>
-            <span style="margin-left: 1rem; color: var(--text-secondary);">
-                {{ $consultante->edad }} años
-            </span>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Información del Consultante</span>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <strong style="font-size: 1.1rem; color: var(--primary-dark);">
+                    {{ $consultante->nombre }}
+                </strong>
+                <span style="color: var(--text-secondary); font-size: 0.95rem;">
+                    {{ $consultante->edad }} años
+                </span>
+            </div>
         </div>
     </div>
 
@@ -30,7 +32,7 @@
             <div class="form-group">
                 <label for="fecha_historia">Fecha de Historia *</label>
                 <input type="date" name="fecha_historia" id="fecha_historia"
-                       value="{{ old('fecha_historia', date('Y-m-d')) }}" required>
+                    value="{{ old('fecha_historia', date('Y-m-d')) }}" required>
             </div>
 
             <!-- Género -->
@@ -39,9 +41,9 @@
                 <select name="genero" id="genero" required>
                     <option value="">Seleccionar...</option>
                     @foreach(App\Models\HistoriaPsicologica::GENEROS as $key => $value)
-                        <option value="{{ $key }}" {{ old('genero') == $key ? 'selected' : '' }}>
-                            {{ $value }}
-                        </option>
+                    <option value="{{ $key }}" {{ old('genero')==$key ? 'selected' : '' }}>
+                        {{ $value }}
+                    </option>
                     @endforeach
                 </select>
             </div>
@@ -52,9 +54,9 @@
                 <select name="grado_instruccion" id="grado_instruccion">
                     <option value="">Seleccionar...</option>
                     @foreach(App\Models\HistoriaPsicologica::GRADOS_INSTRUCCION as $key => $value)
-                        <option value="{{ $key }}" {{ old('grado_instruccion') == $key ? 'selected' : '' }}>
-                            {{ $value }}
-                        </option>
+                    <option value="{{ $key }}" {{ old('grado_instruccion')==$key ? 'selected' : '' }}>
+                        {{ $value }}
+                    </option>
                     @endforeach
                 </select>
             </div>
@@ -65,9 +67,9 @@
                 <select name="estado_civil" id="estado_civil">
                     <option value="">Seleccionar...</option>
                     @foreach(App\Models\HistoriaPsicologica::ESTADOS_CIVILES as $key => $value)
-                        <option value="{{ $key }}" {{ old('estado_civil') == $key ? 'selected' : '' }}>
-                            {{ $value }}
-                        </option>
+                    <option value="{{ $key }}" {{ old('estado_civil')==$key ? 'selected' : '' }}>
+                        {{ $value }}
+                    </option>
                     @endforeach
                 </select>
             </div>
@@ -75,43 +77,43 @@
             <!-- Ocupación -->
             <div class="form-group">
                 <label for="ocupacion">Ocupación</label>
-                <input type="text" name="ocupacion" id="ocupacion"
-                       value="{{ old('ocupacion') }}" placeholder="Ej: Estudiante, Empleado, etc.">
+                <input type="text" name="ocupacion" id="ocupacion" value="{{ old('ocupacion') }}"
+                    placeholder="Ej: Estudiante, Empleado, etc.">
             </div>
 
             <!-- Teléfono -->
             <div class="form-group">
                 <label for="telefono">Teléfono</label>
-                <input type="text" name="telefono" id="telefono"
-                       value="{{ old('telefono', $consultante->telefono) }}" placeholder="999 999 999">
+                <input type="text" name="telefono" id="telefono" value="{{ old('telefono', $consultante->telefono) }}"
+                    placeholder="999 999 999">
             </div>
 
             <!-- Residencia -->
             <div class="form-group">
                 <label for="residencia">Residencia</label>
-                <input type="text" name="residencia" id="residencia"
-                       value="{{ old('residencia') }}" placeholder="Dirección actual">
+                <input type="text" name="residencia" id="residencia" value="{{ old('residencia') }}"
+                    placeholder="Dirección actual">
             </div>
 
             <!-- Religión -->
             <div class="form-group">
                 <label for="religion">Religión</label>
-                <input type="text" name="religion" id="religion"
-                       value="{{ old('religion') }}" placeholder="Católica, Evangélica, etc.">
+                <input type="text" name="religion" id="religion" value="{{ old('religion') }}"
+                    placeholder="Católica, Evangélica, etc.">
             </div>
 
             <!-- Natural de -->
             <div class="form-group">
                 <label for="natural_de">Natural de</label>
-                <input type="text" name="natural_de" id="natural_de"
-                       value="{{ old('natural_de') }}" placeholder="Ciudad/Región de nacimiento">
+                <input type="text" name="natural_de" id="natural_de" value="{{ old('natural_de') }}"
+                    placeholder="Ciudad/Región de nacimiento">
             </div>
 
             <!-- Tiempo de Residencia en Lima -->
             <div class="form-group">
                 <label for="tiempo_residencia_lima">Tiempo de Residencia en Lima</label>
                 <input type="text" name="tiempo_residencia_lima" id="tiempo_residencia_lima"
-                       value="{{ old('tiempo_residencia_lima') }}" placeholder="Ej: 10 años, toda la vida">
+                    value="{{ old('tiempo_residencia_lima') }}" placeholder="Ej: 10 años, toda la vida">
             </div>
         </div>
 
@@ -123,19 +125,19 @@
             <div class="form-group">
                 <label for="persona_responsable">Nombre Completo</label>
                 <input type="text" name="persona_responsable" id="persona_responsable"
-                       value="{{ old('persona_responsable') }}" placeholder="Nombre de la persona responsable">
+                    value="{{ old('persona_responsable') }}" placeholder="Nombre de la persona responsable">
             </div>
 
             <div class="form-group">
                 <label for="parentesco_responsable">Parentesco</label>
                 <input type="text" name="parentesco_responsable" id="parentesco_responsable"
-                       value="{{ old('parentesco_responsable') }}" placeholder="Padre, Madre, Tutor, etc.">
+                    value="{{ old('parentesco_responsable') }}" placeholder="Padre, Madre, Tutor, etc.">
             </div>
 
             <div class="form-group">
                 <label for="telefono_responsable">Teléfono</label>
                 <input type="text" name="telefono_responsable" id="telefono_responsable"
-                       value="{{ old('telefono_responsable') }}" placeholder="999 999 999">
+                    value="{{ old('telefono_responsable') }}" placeholder="999 999 999">
             </div>
         </div>
 
@@ -147,13 +149,13 @@
             <div class="form-group">
                 <label for="asisten_primera_consulta">¿Quiénes asisten?</label>
                 <input type="text" name="asisten_primera_consulta" id="asisten_primera_consulta"
-                       value="{{ old('asisten_primera_consulta') }}" placeholder="Nombres de quienes asisten">
+                    value="{{ old('asisten_primera_consulta') }}" placeholder="Nombres de quienes asisten">
             </div>
 
             <div class="form-group">
                 <label for="telefono_primera_consulta">Teléfono</label>
                 <input type="text" name="telefono_primera_consulta" id="telefono_primera_consulta"
-                       value="{{ old('telefono_primera_consulta') }}" placeholder="999 999 999">
+                    value="{{ old('telefono_primera_consulta') }}" placeholder="999 999 999">
             </div>
         </div>
 
@@ -165,13 +167,13 @@
             <div class="form-group">
                 <label for="lugar_entrevista">Lugar de la Entrevista</label>
                 <input type="text" name="lugar_entrevista" id="lugar_entrevista"
-                       value="{{ old('lugar_entrevista', 'Los Olivos (P) (V)') }}">
+                    value="{{ old('lugar_entrevista', 'Los Olivos (P) (V)') }}">
             </div>
 
             <div class="form-group">
                 <label for="terapeuta">Terapeuta Asignado</label>
-                <input type="text" name="terapeuta" id="terapeuta"
-                       value="{{ old('terapeuta') }}" placeholder="Nombre del terapeuta">
+                <input type="text" name="terapeuta" id="terapeuta" value="{{ old('terapeuta') }}"
+                    placeholder="Nombre del terapeuta">
             </div>
         </div>
 
@@ -182,9 +184,9 @@
                 <select name="recomendado_por" id="recomendado_por" onchange="toggleRecomendadoDetalle()">
                     <option value="">Seleccionar...</option>
                     @foreach(App\Models\HistoriaPsicologica::RECOMENDADO_POR as $key => $value)
-                        <option value="{{ $key }}" {{ old('recomendado_por') == $key ? 'selected' : '' }}>
-                            {{ $value }}
-                        </option>
+                    <option value="{{ $key }}" {{ old('recomendado_por')==$key ? 'selected' : '' }}>
+                        {{ $value }}
+                    </option>
                     @endforeach
                 </select>
             </div>
@@ -192,38 +194,37 @@
             <div class="form-group" id="recomendado_detalle_group" style="display: none;">
                 <label for="recomendado_detalle">Especificar</label>
                 <input type="text" name="recomendado_detalle" id="recomendado_detalle"
-                       value="{{ old('recomendado_detalle') }}" placeholder="Especifique">
+                    value="{{ old('recomendado_detalle') }}" placeholder="Especifique">
             </div>
         </div>
     </div>
 
     <!-- B) MOTIVO DE CONSULTA -->
-    <div class="card">
+    {{-- <div class="card">
         <div class="card-header">B) MOTIVO DE CONSULTA</div>
 
         <div class="form-group">
             <label for="motivo_consulta">Motivo de Consulta *</label>
             <textarea name="motivo_consulta" id="motivo_consulta" rows="4" required
-                      placeholder="Describa el motivo principal de la consulta...">{{ old('motivo_consulta') }}</textarea>
+                placeholder="Describa el motivo principal de la consulta...">{{ old('motivo_consulta') }}</textarea>
         </div>
-    </div>
+    </div> --}}
 
     <!-- C) PROBLEMA ACTUAL -->
-    <div class="card">
+    {{-- <div class="card">
         <div class="card-header">C) PROBLEMA ACTUAL</div>
 
-        @for($i = 1; $i <= 5; $i++)
-        <div class="form-group">
+        @for($i = 1; $i <= 5; $i++) <div class="form-group">
             <label for="problema_actual_{{ $i }}">Problema {{ $i }}</label>
             <textarea name="problema_actual_{{ $i }}" id="problema_actual_{{ $i }}" rows="2"
-                      placeholder="Describa el problema {{ $i }}...">{{ old("problema_actual_$i") }}</textarea>
-        </div>
-        @endfor
+                placeholder="Describa el problema {{ $i }}...">{{ old("problema_actual_$i") }}</textarea>
     </div>
+    @endfor
+    </div> --}}
 
     <!-- Botones de Acción -->
     <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-        <a href="{{ route('consultantes.show', $consultante) }}" class="btn btn-secondary">
+        <a href="{{ route('historias.nueva') }}" class="btn btn-secondary">
             Cancelar
         </a>
         <button type="submit" class="btn btn-primary">
@@ -233,7 +234,7 @@
 </form>
 
 <script>
-function toggleRecomendadoDetalle() {
+    function toggleRecomendadoDetalle() {
     const recomendadoPor = document.getElementById('recomendado_por').value;
     const detalleGroup = document.getElementById('recomendado_detalle_group');
     const detalleInput = document.getElementById('recomendado_detalle');

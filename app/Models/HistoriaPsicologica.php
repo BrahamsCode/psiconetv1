@@ -37,16 +37,16 @@ class HistoriaPsicologica extends Model
         'recomendado_detalle',
 
         // B) Motivo de consulta y problema actual
-        'motivo_consulta',
-        'problema_actual_1',
-        'problema_actual_2',
-        'problema_actual_3',
-        'problema_actual_4',
-        'problema_actual_5',
+        // 'motivo_consulta',
+        // 'problema_actual_1',
+        // 'problema_actual_2',
+        // 'problema_actual_3',
+        // 'problema_actual_4',
+        // 'problema_actual_5',
 
         // Diagrama familiar
-        'diagrama_familiar_observaciones',
-        'lazos_familiares',
+        // 'diagrama_familiar_observaciones',
+        // 'lazos_familiares',
     ];
 
     protected $casts = [
@@ -126,13 +126,13 @@ class HistoriaPsicologica extends Model
     }
 
     /**
-     * Generar número de historia automáticamente
+     * Generar número de historia automáticamente (año + 4 dígitos)
      */
     public static function generarNumeroHistoria()
     {
         $year = date('Y');
-        $ultimaHistoria = self::whereYear('fecha_historia', $year)
-            ->orderBy('numero_historia', 'desc')
+        $ultimaHistoria = self::where('numero_historia', 'Like' , $year . '-%')
+            ->orderByRaw('CAST(SUBSTR(numero_historia, -4) AS INTEGER) DESC')
             ->first();
 
         if ($ultimaHistoria) {

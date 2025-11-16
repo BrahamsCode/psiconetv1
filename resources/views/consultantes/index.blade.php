@@ -10,10 +10,17 @@
     </div>
 
     @if($consultantes->isEmpty())
-        <p style="text-align: center; padding: 2rem; color: #999;">
-            No hay consultantes registrados. 
-            <a href="{{ route('consultantes.create') }}" style="color: #667eea;">¡Crea el primero!</a>
-        </p>
+        <div style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+            <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+                👥 No hay consultantes registrados
+            </p>
+            <p style="margin-bottom: 1.5rem;">
+                Comienza registrando tu primer consultante
+            </p>
+            <a href="{{ route('consultantes.create') }}" class="btn btn-primary">
+                ➕ Registrar Nuevo Consultante
+            </a>
+        </div>
     @else
         <table>
             <thead>

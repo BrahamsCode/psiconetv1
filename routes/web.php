@@ -8,6 +8,7 @@ use App\Http\Controllers\HistoriaPsicologicaController;
 use App\Http\Controllers\EvaluacionPsicologicaController;
 use App\Http\Controllers\InterconsultaPsiquiatricaController;
 use App\Http\Controllers\ConsumoSustanciaController;
+use App\Http\Controllers\TratamientoPrevioController;
 
 // Dashboard
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
@@ -30,6 +31,8 @@ Route::delete('intervenciones/{intervencion}', [IntervencionController::class, '
 // Rutas para Historias Psicológicas
 Route::get('historias', [HistoriaPsicologicaController::class, 'index'])
     ->name('historias.index');
+Route::get('/historias/nueva', [HistoriaPsicologicaController::class, 'selectConsultante'])
+     ->name('historias.nueva');
 Route::get('consultantes/{consultante}/historia/create', [HistoriaPsicologicaController::class, 'create'])
     ->name('historias.create');
 Route::post('consultantes/{consultante}/historia', [HistoriaPsicologicaController::class, 'store'])
@@ -70,3 +73,11 @@ Route::put('consumo/{consumo}', [ConsumoSustanciaController::class, 'update'])
     ->name('consumo.update');
 Route::delete('consumo/{consumo}', [ConsumoSustanciaController::class, 'destroy'])
     ->name('consumo.destroy');
+
+// Rutas para Tratamientos Previos
+Route::get('tratamientos', [TratamientoPrevioController::class, 'index'])
+    ->name('tratamientos.index'); // Lista de consultantes
+Route::get('tratamientos/{consultante}', [TratamientoPrevioController::class, 'show'])
+    ->name('tratamientos.show'); // Ver/Editar tratamientos
+Route::put('tratamientos/{consultante}', [TratamientoPrevioController::class, 'update'])
+    ->name('tratamientos.update'); // Guardar/Actualizar tratamientos
