@@ -161,8 +161,8 @@
     <div class="main-content" role="main">
         <div class="top-bar" role="banner">
             <div class="page-title">@yield('page-title', 'Dashboard')</div>
-            <div class="top-bar-date">
-                {{ now()->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY') }}
+            <div class="top-bar-date" id="reloj-tiempo-real">
+                {{ now()->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY - HH:mm:ss') }}
             </div>
         </div>
 
@@ -247,6 +247,30 @@
                 overlay.classList.remove('active');
             }
         });
+
+        // Real-time clock update
+        function actualizarReloj() {
+            const ahora = new Date();
+
+            const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+            const diaSemana = dias[ahora.getDay()];
+            const dia = ahora.getDate();
+            const mes = meses[ahora.getMonth()];
+            const año = ahora.getFullYear();
+
+            const horas = String(ahora.getHours()).padStart(2, '0');
+            const minutos = String(ahora.getMinutes()).padStart(2, '0');
+            const segundos = String(ahora.getSeconds()).padStart(2, '0');
+
+            const fechaHora = `${diaSemana}, ${dia} de ${mes} de ${año} - ${horas}:${minutos}:${segundos}`;
+
+            document.getElementById('reloj-tiempo-real').textContent = fechaHora;
+        }
+        setInterval(actualizarReloj, 1000);
+        actualizarReloj();
     </script>
 </body>
 
