@@ -136,9 +136,9 @@
                     <span>Línea base y de Tratamiento</span>
                 </a>
 
-                <a href="{{ route('consultantes.index') }}"
-                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
-                    <span class="nav-icon">⚕️</span>
+                <a href="{{ route('conductas.index') }}"
+                    class="nav-item {{ request()->routeIs('conductas.*') ? 'active' : '' }}">
+                    <span class="nav-icon">😷</span>
                     <span>Procedimiento Terapéutico</span>
                 </a>
 
