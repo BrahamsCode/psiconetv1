@@ -44,7 +44,7 @@ class HistoriaPsicologica extends Model
         // 'problema_actual_4',
         // 'problema_actual_5',
 
-        // Diagrama familiar
+        // Genograma
         // 'diagrama_familiar_observaciones',
         // 'lazos_familiares',
     ];
@@ -131,7 +131,7 @@ class HistoriaPsicologica extends Model
     public static function generarNumeroHistoria()
     {
         $year = date('Y');
-        $ultimaHistoria = self::where('numero_historia', 'Like' , $year . '-%')
+        $ultimaHistoria = self::where('numero_historia', 'Like', $year . '-%')
             ->orderByRaw('CAST(SUBSTR(numero_historia, -4) AS INTEGER) DESC')
             ->first();
 

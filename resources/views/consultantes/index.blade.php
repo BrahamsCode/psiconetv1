@@ -30,7 +30,7 @@
                     <th>Edad</th>
                     <th>Teléfono</th>
                     <th>Email</th>
-                    <th>Sesiones</th>
+                    <th>Intervenciones</th>
                     <th>Fecha Registro</th>
                     <th>Acciones</th>
                 </tr>
@@ -45,7 +45,7 @@
                     <td>{{ $consultante->email ?? '-' }}</td>
                     <td>
                         <span style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem;">
-                            {{ $consultante->intervenciones->count() }} sesiones
+                            {{ $consultante->intervenciones->count() }} Intervenciones
                         </span>
                     </td>
                     <td>{{ $consultante->fecha_registro->format('d/m/Y') }}</td>

@@ -23,7 +23,8 @@
         <a href="{{ route('historias.edit', $historia) }}" class="btn btn-primary btn-sm">
             ✏️ Editar Historia
         </a>
-        <a href="{{ route('historias.pdf', $historia) }}" class="btn btn-sm" style="background: var(--error); color: white;" target="_blank">
+        <a href="{{ route('historias.pdf', $historia) }}" class="btn btn-sm"
+            style="background: var(--error); color: white;" target="_blank">
             📄 Exportar PDF
         </a>
     </div>
@@ -133,7 +134,7 @@
             <strong>Recomendado por:</strong><br>
             {{ $historia->recomendado_por ?? '-' }}
             @if($historia->recomendado_detalle)
-                ({{ $historia->recomendado_detalle }})
+            ({{ $historia->recomendado_detalle }})
             @endif
         </div>
     </div>
@@ -169,7 +170,7 @@
             💊 Tratamientos Previos
         </a>
         <a href="#" class="btn btn-secondary">
-            👨‍👩‍👧‍👦 Diagrama Familiar
+            👨‍👩‍👧‍👦 Genograma
         </a>
         <a href="#" class="btn btn-secondary">
             🎯 Conductas Problema

@@ -37,7 +37,7 @@
                             <th style="width: 200px;">Lugar</th>
                             <th style="width: 150px;">Tiempo</th>
                             <th style="width: 250px;">Motivo de término</th>
-                            <th style="width: 80px;">Acción</th>
+                            <th style="width: 80px;"></th>
                         </tr>
                     </thead>
                     <tbody id="tratamientosBody">

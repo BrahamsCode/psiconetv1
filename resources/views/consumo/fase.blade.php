@@ -75,10 +75,10 @@
         <thead>
             <tr>
                 <th>Sustancia</th>
-                <th>Fase Inicial</th>
+
                 <th>Edad Inicio</th>
                 <th>Edad Fin</th>
-                <th>Años de Consumo</th>
+                <th>Fase</th>
                 <th>Observaciones</th>
                 <th>Acciones</th>
             </tr>
@@ -87,7 +87,10 @@
             @forelse($consumos as $consumo)
             <tr>
                 <td><strong>{{ $consumo->nombre_droga }}</strong></td>
-                <td>
+
+                <td>{{ $consumo->edad_inicio }} años</td>
+                <td>{{ $consumo->edad_fin ? $consumo->edad_fin . ' años' : 'Actualidad' }}</td>
+                                <td>
                     <span class="badge badge-{{
                         $consumo->fase_consumo === 'adicto' ? 'error' :
                         ($consumo->fase_consumo === 'habitual' ? 'warning' :
@@ -96,16 +99,7 @@
                         {{ $consumo->nombre_fase }}
                     </span>
                 </td>
-                <td>{{ $consumo->edad_inicio }} años</td>
-                <td>{{ $consumo->edad_fin ? $consumo->edad_fin . ' años' : 'Actualidad' }}</td>
-                <td>
-                    @php
-                        $aniosConsumo = $consumo->edad_fin
-                            ? ($consumo->edad_fin - $consumo->edad_inicio)
-                            : '(en curso)';
-                    @endphp
-                    {{ is_numeric($aniosConsumo) ? $aniosConsumo . ' años' : $aniosConsumo }}
-                </td>
+
                 <td>{{ $consumo->observaciones ?? '-' }}</td>
                 <td class="actions">
                     <button class="btn btn-sm btn-secondary"
@@ -472,7 +466,7 @@ function drawChart() {
                             labels.push('Fase: ' + meta.fase);
                             labels.push('Edad: ' + Math.round(meta.edad) + ' años');
                             if (meta.aniosEnFase > 0) {
-                                labels.push('Años en esta fase: ' + meta.aniosEnFase.toFixed(1));
+                                labels.push('Años en esta fase: ' + parseFloat(meta.aniosEnFase.toFixed(1)));
                             }
                             if (meta.observaciones) {
                                 labels.push('Obs: ' + meta.observaciones);
@@ -590,10 +584,24 @@ function updateLegend() {
 }
 
 function exportChart() {
+    const canvas = document.getElementById('consumoChart');
+    const ctx = canvas.getContext('2d');
+
+    // Guardar estado y agregar fondo blanco
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Exportar
     const link = document.createElement('a');
     link.download = 'fase-consumo-{{ $historia->numero_historia }}.png';
-    link.href = myChart.toBase64Image();
+    link.href = canvas.toDataURL('image/png');
     link.click();
+
+    // Restaurar
+    ctx.restore();
+    myChart.update();
 }
 
 function toggleFormModal() {

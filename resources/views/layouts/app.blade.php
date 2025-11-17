@@ -112,7 +112,7 @@
                 <a href="{{ route('consultantes.index') }}"
                     class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
                     <span class="nav-icon">⚕️</span>
-                    <span>Diagrama Familiar</span>
+                    <span>Genograma</span>
                 </a>
                 <a href="{{ route('consultantes.index') }}"
                     class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">

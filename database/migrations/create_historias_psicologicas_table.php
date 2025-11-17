@@ -51,7 +51,7 @@ return new class extends Migration
             $table->text('problema_actual_4')->nullable();
             $table->text('problema_actual_5')->nullable();
 
-            // DIAGRAMA FAMILIAR
+            // Genograma
             $table->text('diagrama_familiar_observaciones')->nullable();
             $table->json('lazos_familiares')->nullable(); // Guardará las relaciones en JSON
 

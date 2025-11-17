@@ -46,9 +46,9 @@
     @endif
 
     <div class="actions">
-        <a href="{{ route('intervenciones.create', $consultante) }}" class="btn btn-primary">
+        {{-- <a href="{{ route('intervenciones.create', $consultante) }}" class="btn btn-primary">
             ➕ Nueva Intervención
-        </a>
+        </a> --}}
         <a href="{{ route('consultantes.edit', $consultante) }}" class="btn btn-secondary">
             ✏️ Editar Consultante
         </a>
@@ -75,9 +75,9 @@
         <p style="margin-bottom: 1.5rem;">
             Registra la primera sesión de intervención
         </p>
-        <a href="{{ route('intervenciones.create', $consultante) }}" class="btn btn-primary">
-            ➕ Registrar Primera Sesión
-        </a>
+        {{-- <a href="{{ route('intervenciones.create', $consultante) }}" class="btn btn-primary">
+            ➕ Registrar Primera Interversión
+        </a> --}}
     </div>
     @else
     <table>
