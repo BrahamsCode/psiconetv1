@@ -9,6 +9,7 @@ use App\Models\TratamientoPrevio;
 use App\Models\ConductaProblema;
 use App\Models\EvaluacionPsicologica;
 use App\Models\InterconsultaPsiquiatrica;
+use App\Models\Afiliacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -18,65 +19,48 @@ class HistoriaPsicologicaController extends Controller
     /**
      * Mostrar el formulario para crear historia psicológica
      */
-    public function create(Consultante $consultante)
-    {
-        // Verificar si ya tiene historia
-        if ($consultante->tieneHistoria()) {
-            return redirect()
-                ->route('historias.show', $consultante->historiaPsicologica)
-                ->with('info', 'Este consultante ya tiene una historia psicológica creada.');
-        }
-
-        return view('historias.create', compact('consultante'));
+public function create(Afiliacion $afiliacion)
+{
+    if ($afiliacion->tieneHistoria()) {
+        return redirect()
+            ->route('historias.show', $afiliacion->historiaPsicologica)
+            ->with('info', 'Esta afiliación ya tiene una historia psicológica creada.');
     }
 
-    /**
-     * Guardar la historia psicológica
-     */
-    public function store(Request $request, Consultante $consultante)
-    {
-        $validated = $request->validate([
-            'fecha_historia' => 'required|date',
-            'genero' => 'required|string',
-            'grado_instruccion' => 'nullable|string',
-            'estado_civil' => 'nullable|string',
-            'ocupacion' => 'nullable|string|max:255',
-            'telefono' => 'nullable|string|max:20',
-            'residencia' => 'nullable|string',
-            'religion' => 'nullable|string|max:100',
-            'natural_de' => 'nullable|string|max:255',
-            'tiempo_residencia_lima' => 'nullable|string|max:100',
-            'persona_responsable' => 'nullable|string|max:255',
-            'parentesco_responsable' => 'nullable|string|max:100',
-            'telefono_responsable' => 'nullable|string|max:20',
-            'asisten_primera_consulta' => 'nullable|string',
-            'telefono_primera_consulta' => 'nullable|string|max:20',
-            'lugar_entrevista' => 'nullable|string|max:255',
-            'terapeuta' => 'nullable|string|max:255',
-            'recomendado_por' => 'nullable|string',
-            'recomendado_detalle' => 'nullable|required_if:recomendado_por,Otros|string|max:255',
+    return view('historias.create', compact('afiliacion'));
+}
 
-        ]);
+public function store(Request $request, Afiliacion $afiliacion)
+{
+    $validated = $request->validate([
+        'fecha_historia' => 'required|date',
+        'motivo_consulta' => 'nullable|string',
+        'problema_actual_1' => 'nullable|string',
+        'problema_actual_2' => 'nullable|string',
+        'problema_actual_3' => 'nullable|string',
+        'problema_actual_4' => 'nullable|string',
+        'problema_actual_5' => 'nullable|string',
+    ]);
 
-        DB::beginTransaction();
-        try {
-            $historia = new HistoriaPsicologica($validated);
-            $historia->consultante_id = $consultante->id;
-            $historia->numero_historia = HistoriaPsicologica::generarNumeroHistoria();
-            $historia->save();
+    DB::beginTransaction();
+    try {
+        $historia = new HistoriaPsicologica($validated);
+        $historia->afiliacion_id = $afiliacion->id;
+        $historia->numero_historia = HistoriaPsicologica::generarNumeroHistoria();
+        $historia->save();
 
-            DB::commit();
+        DB::commit();
 
-            return redirect()
-                ->route('historias.show', $historia)
-                ->with('success', 'Historia psicológica creada exitosamente.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()
-                ->withInput()
-                ->with('error', 'Error al crear la historia: ' . $e->getMessage());
-        }
+        return redirect()
+            ->route('historias.show', $historia)
+            ->with('success', 'Historia psicológica creada exitosamente.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()
+            ->withInput()
+            ->with('error', 'Error al crear la historia: ' . $e->getMessage());
     }
+}
 
     /**
      * Mostrar la historia psicológica completa
@@ -164,14 +148,14 @@ class HistoriaPsicologicaController extends Controller
     /*
     *Mostrar lista de consultantes sin historia psicológica
      */
-    public function selectConsultante()
-    {
-        $consultantes = Consultante::whereDoesntHave('historiaPsicologica')
-            ->orderBy('nombres')
-            ->get();
+    // public function selectConsultante()
+    // {
+    //     $consultantes = Consultante::whereDoesntHave('historiaPsicologica')
+    //         ->orderBy('nombres')
+    //         ->get();
 
-        return view('historias.selectConsultante', compact('consultantes'));
-    }
+    //     return view('historias.selectConsultante', compact('consultantes'));
+    // }
 
     /**
      * Exportar historia a PDF
@@ -194,5 +178,18 @@ class HistoriaPsicologicaController extends Controller
         $filename = 'Historia_' . $historia->numero_historia . '_' . now()->format('Ymd') . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+
+    /**
+     * Mostrar lista de afiliaciones sin historia psicológica
+     */
+    public function selectAfiliacion()
+    {
+        $afiliaciones = Afiliacion::whereDoesntHave('historiaPsicologica')
+            ->orderBy('nombres_apellidos')
+            ->get();
+
+        return view('historias.selectAfiliacion', compact('afiliaciones'));
     }
 }

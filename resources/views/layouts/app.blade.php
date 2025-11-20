@@ -5,8 +5,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@yield('title', 'Psiconet Sistema')</title>
+
+    <!-- Estilos principales -->
     <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}" />
 
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Estilos adicionales de cada página -->
+    @stack('styles')
 </head>
 
 <body>
@@ -43,20 +50,20 @@
                 </a>
             </div>
 
-            <!-- SECCIÓN: CONSULTANTES -->
+            <!-- SECCIÓN: AFILIACIONES (antes Consultantes) -->
             <div class="nav-section">
-                <div class="nav-section-title">Consultantes</div>
+                <div class="nav-section-title">Datos de Filiación</div>
 
-                <a href="{{ route('consultantes.index') }}"
-                    class="nav-item {{ request()->routeIs('consultantes.index') ? 'active' : '' }}">
+                <a href="{{ route('afiliaciones.index') }}"
+                    class="nav-item {{ request()->routeIs('afiliaciones.index') ? 'active' : '' }}">
                     <span class="nav-icon">👥</span>
-                    <span>Todos los Consultantes</span>
+                    <span>Todas las Afiliaciones</span>
                 </a>
 
-                <a href="{{ route('consultantes.create') }}"
-                    class="nav-item {{ request()->routeIs('consultantes.create') ? 'active' : '' }}">
+                <a href="{{ route('afiliaciones.create') }}"
+                    class="nav-item {{ request()->routeIs('afiliaciones.create') ? 'active' : '' }}">
                     <span class="nav-icon">➕</span>
-                    <span>Nuevo Consultante</span>
+                    <span>Nueva Afiliación</span>
                 </a>
             </div>
 
@@ -72,20 +79,14 @@
 
                 <a href="{{ route('historias.nueva') }}"
                     class="nav-item {{ request()->routeIs('historias.nueva') ? 'active' : '' }}">
-                    <span class="nav-icon">📋</span>
-                    <span>Nueva Historia</span>
-                </a>
-
-                {{-- <a href="{{ route('consultantes.index') }}"
-                    class="nav-item {{ request()->routeIs('historias.create') ? 'active' : '' }}">
                     <span class="nav-icon">📝</span>
                     <span>Nueva Historia</span>
-                </a> --}}
+                </a>
             </div>
 
-            <!-- SECCIÓN: INFORMACIÓN RELACIONADA AL CONSUMO -->
+            <!-- SECCIÓN: EVALUACIONES PSICOLÓGICAS -->
             <div class="nav-section">
-                <div class="nav-section-title">🧠Evaluaciones Psicológicas</div>
+                <div class="nav-section-title">Evaluaciones Psicológicas</div>
 
                 <div class="nav-item nav-parent {{ request()->routeIs('consumo.*') ? 'active' : '' }}"
                     onclick="toggleSubmenu('consumo-submenu')" role="button"
@@ -95,8 +96,9 @@
                     <span style="margin-left:auto;opacity:0.7">▾</span>
                 </div>
 
-                <div class="submenu {{ request()->routeIs('consumo.*') ? 'active' : '' }}" id="consumo-submenu"
-                    style="{{ request()->routeIs('consumo.*') ? 'display:block;' : '' }}">
+                <div class="submenu {{ request()->routeIs('consumo.*') || request()->routeIs('tratamientos.*') ? 'active' : '' }}"
+                    id="consumo-submenu"
+                    style="{{ request()->routeIs('consumo.*') || request()->routeIs('tratamientos.*') ? 'display:block;' : '' }}">
                     <a href="{{ route('consumo.index') }}"
                         class="nav-item {{ request()->routeIs('consumo.*') ? 'active' : '' }}">
                         <span class="nav-icon">🔁</span>
@@ -109,46 +111,49 @@
                     </a>
                 </div>
 
-                <a href="{{ route('consultantes.index') }}"
-                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
-                    <span class="nav-icon">⚕️</span>
+                <a href="{{ route('historias.index') }}"
+                    class="nav-item {{ request()->routeIs('genograma.*') ? 'active' : '' }}">
+                    <span class="nav-icon">👨‍👩‍👧‍👦</span>
                     <span>Genograma</span>
                 </a>
-                <a href="{{ route('consultantes.index') }}"
-                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
-                    <span class="nav-icon">⚕️</span>
+
+                <a href="{{ route('historias.index') }}"
+                    class="nav-item {{ request()->routeIs('lazos.*') ? 'active' : '' }}">
+                    <span class="nav-icon">🔗</span>
                     <span>Lazos Familiares</span>
                 </a>
 
-                <a href="{{ route('consultantes.index') }}"
-                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
-                    <span class="nav-icon">⚕️</span>
+                <a href="{{ route('historias.index') }}"
+                    class="nav-item {{ request()->routeIs('motivo.*') ? 'active' : '' }}">
+                    <span class="nav-icon">❓</span>
                     <span>Motivo de Consulta</span>
                 </a>
-                <a href="{{ route('consultantes.index') }}"
-                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
-                    <span class="nav-icon">⚕️</span>
+
+                <a href="{{ route('historias.index') }}"
+                    class="nav-item {{ request()->routeIs('problema.*') ? 'active' : '' }}">
+                    <span class="nav-icon">⚠️</span>
                     <span>Problema Actual</span>
                 </a>
-                <a href="{{ route('consultantes.index') }}"
-                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
-                    <span class="nav-icon">⚕️</span>
+
+                <a href="{{ route('historias.index') }}"
+                    class="nav-item {{ request()->routeIs('linea-base.*') ? 'active' : '' }}">
+                    <span class="nav-icon">📊</span>
                     <span>Línea base y de Tratamiento</span>
                 </a>
 
                 <a href="{{ route('conductas.index') }}"
                     class="nav-item {{ request()->routeIs('conductas.*') ? 'active' : '' }}">
-                    <span class="nav-icon">😷</span>
+                    <span class="nav-icon">🎯</span>
                     <span>Procedimiento Terapéutico</span>
                 </a>
 
-                <a href="{{ route('consultantes.index') }}"
-                    class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
-                    <span class="nav-icon">⚕️</span>
-                    <span>Evaluación Psicológica </span>
+                <a href="{{ route('historias.index') }}"
+                    class="nav-item {{ request()->routeIs('evaluaciones.*') ? 'active' : '' }}">
+                    <span class="nav-icon">📝</span>
+                    <span>Evaluación Psicológica</span>
                 </a>
 
-                <a href="{{ route('consultantes.index') }}"
+                <a href="{{ route('historias.index') }}"
                     class="nav-item {{ request()->routeIs('interconsultas.*') ? 'active' : '' }}">
                     <span class="nav-icon">⚕️</span>
                     <span>Interconsulta Psiquiátrica</span>
@@ -212,7 +217,9 @@
         </div>
     </div>
 
-    <script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+       <script>
         // Sidebar toggle and mobile overlay handling
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -221,7 +228,7 @@
             overlay.classList.toggle('active');
         }
 
-        // Close sidebar when clicking a nav link on mobile (only for anchor links)
+        // Close sidebar when clicking a nav link on mobile
         document.querySelectorAll('a.nav-item').forEach(item => {
             item.addEventListener('click', function() {
                 if (window.innerWidth <= 768) {
@@ -230,7 +237,7 @@
             });
         });
 
-        // Toggle a submenu by id
+        // Toggle submenu
         function toggleSubmenu(id) {
             const el = document.getElementById(id);
             if (!el) return;
@@ -238,7 +245,7 @@
             el.style.display = isActive ? 'block' : 'none';
         }
 
-        // Ensure sidebar closes when resizing back to desktop
+        // Ensure sidebar closes when resizing to desktop
         window.addEventListener('resize', function() {
             if (window.innerWidth > 768) {
                 const sidebar = document.getElementById('sidebar');
@@ -248,11 +255,10 @@
             }
         });
 
-        // Real-time clock update
+        // Real-time clock
         function actualizarReloj() {
             const ahora = new Date();
-
-            const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
             const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
                         'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
@@ -266,12 +272,20 @@
             const segundos = String(ahora.getSeconds()).padStart(2, '0');
 
             const fechaHora = `${diaSemana}, ${dia} de ${mes} de ${año} - ${horas}:${minutos}:${segundos}`;
-
-            document.getElementById('reloj-tiempo-real').textContent = fechaHora;
+            const elemento = document.getElementById('reloj-tiempo-real');
+            if (elemento) {
+                elemento.textContent = fechaHora;
+            }
         }
         setInterval(actualizarReloj, 1000);
         actualizarReloj();
+
+        if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
     </script>
+    @stack('scripts')
 </body>
 
 </html>
+

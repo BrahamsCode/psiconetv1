@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ConsultanteController;
+use App\Http\Controllers\AfiliacionController;
 use App\Http\Controllers\IntervencionController;
 use App\Http\Controllers\HistoriaPsicologicaController;
 use App\Http\Controllers\EvaluacionPsicologicaController;
@@ -14,13 +14,15 @@ use App\Http\Controllers\ConductaProblemaController;
 // Dashboard
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-// Rutas para Consultantes
-Route::resource('consultantes', ConsultanteController::class);
+// Rutas para Afiliaciones (CORREGIDO)
+Route::resource('afiliaciones', AfiliacionController::class)->parameters([
+    'afiliaciones' => 'afiliacion'
+]);
 
 // Rutas para Intervenciones
-Route::get('consultantes/{consultante}/intervenciones/create', [IntervencionController::class, 'create'])
+Route::get('afiliaciones/{afiliacion}/intervenciones/create', [IntervencionController::class, 'create'])
     ->name('intervenciones.create');
-Route::post('consultantes/{consultante}/intervenciones', [IntervencionController::class, 'store'])
+Route::post('afiliaciones/{afiliacion}/intervenciones', [IntervencionController::class, 'store'])
     ->name('intervenciones.store');
 Route::get('intervenciones/{intervencion}/edit', [IntervencionController::class, 'edit'])
     ->name('intervenciones.edit');
@@ -32,11 +34,11 @@ Route::delete('intervenciones/{intervencion}', [IntervencionController::class, '
 // Rutas para Historias Psicológicas
 Route::get('historias', [HistoriaPsicologicaController::class, 'index'])
     ->name('historias.index');
-Route::get('/historias/nueva', [HistoriaPsicologicaController::class, 'selectConsultante'])
+Route::get('/historias/nueva', [HistoriaPsicologicaController::class, 'selectAfiliacion'])
     ->name('historias.nueva');
-Route::get('consultantes/{consultante}/historia/create', [HistoriaPsicologicaController::class, 'create'])
+Route::get('afiliaciones/{afiliacion}/historia/create', [HistoriaPsicologicaController::class, 'create'])
     ->name('historias.create');
-Route::post('consultantes/{consultante}/historia', [HistoriaPsicologicaController::class, 'store'])
+Route::post('afiliaciones/{afiliacion}/historia', [HistoriaPsicologicaController::class, 'store'])
     ->name('historias.store');
 Route::get('historias/{historia}', [HistoriaPsicologicaController::class, 'show'])
     ->name('historias.show');
@@ -65,9 +67,9 @@ Route::delete('interconsultas/{interconsulta}', [InterconsultaPsiquiatricaContro
 
 // Rutas para Consumo de Sustancias
 Route::get('consumo/fase', [ConsumoSustanciaController::class, 'index'])
-    ->name('consumo.index'); // Lista de consultantes
-Route::get('consumo/fase/{consultante}', [ConsumoSustanciaController::class, 'faseConsumo'])
-    ->name('consumo.fase'); // Gráfico de fase de consumo
+    ->name('consumo.index');
+Route::get('consumo/fase/{afiliacion}', [ConsumoSustanciaController::class, 'faseConsumo'])
+    ->name('consumo.fase');
 Route::post('historias/{historia}/consumo', [ConsumoSustanciaController::class, 'store'])
     ->name('consumo.store');
 Route::put('consumo/{consumo}', [ConsumoSustanciaController::class, 'update'])
@@ -77,12 +79,11 @@ Route::delete('consumo/{consumo}', [ConsumoSustanciaController::class, 'destroy'
 
 // Rutas para Tratamientos Previos
 Route::get('tratamientos', [TratamientoPrevioController::class, 'index'])
-    ->name('tratamientos.index'); // Lista de consultantes
-Route::get('tratamientos/{consultante}', [TratamientoPrevioController::class, 'show'])
-    ->name('tratamientos.show'); // Ver/Editar tratamientos
-Route::put('tratamientos/{consultante}', [TratamientoPrevioController::class, 'update'])
-    ->name('tratamientos.update'); // Guardar/Actualizar tratamientos
-
+    ->name('tratamientos.index');
+Route::get('tratamientos/{afiliacion}', [TratamientoPrevioController::class, 'show'])
+    ->name('tratamientos.show');
+Route::put('tratamientos/{afiliacion}', [TratamientoPrevioController::class, 'update'])
+    ->name('tratamientos.update');
 
 // Rutas para Procedimiento Terapéutico (Conductas Problema)
 Route::prefix('conductas')->group(function () {
