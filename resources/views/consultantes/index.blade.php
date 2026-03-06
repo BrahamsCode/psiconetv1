@@ -10,10 +10,17 @@
     </div>
 
     @if($consultantes->isEmpty())
-        <p style="text-align: center; padding: 2rem; color: #999;">
-            No hay consultantes registrados. 
-            <a href="{{ route('consultantes.create') }}" style="color: #667eea;">¡Crea el primero!</a>
-        </p>
+        <div style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+            <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+                👥 No hay consultantes registrados
+            </p>
+            <p style="margin-bottom: 1.5rem;">
+                Comienza registrando tu primer consultante
+            </p>
+            <a href="{{ route('consultantes.create') }}" class="btn btn-primary">
+                ➕ Registrar Nuevo Consultante
+            </a>
+        </div>
     @else
         <table>
             <thead>
@@ -23,7 +30,7 @@
                     <th>Edad</th>
                     <th>Teléfono</th>
                     <th>Email</th>
-                    <th>Sesiones</th>
+                    <th>Intervenciones</th>
                     <th>Fecha Registro</th>
                     <th>Acciones</th>
                 </tr>
@@ -38,7 +45,7 @@
                     <td>{{ $consultante->email ?? '-' }}</td>
                     <td>
                         <span style="background: #667eea; color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem;">
-                            {{ $consultante->intervenciones->count() }} sesiones
+                            {{ $consultante->intervenciones->count() }} Intervenciones
                         </span>
                     </td>
                     <td>{{ $consultante->fecha_registro->format('d/m/Y') }}</td>

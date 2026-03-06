@@ -43,6 +43,35 @@ class ConsumoSustancia extends Model
         'adicto' => 'Adicto',
     ];
 
+    // Colores para cada tipo de droga
+    const COLORES_DROGAS = [
+        '1' => '#EF4444',  // OH - Rojo
+        '2' => '#14B8A6',  // TUCCI - Teal
+        '3' => '#10B981',  // MH - Verde
+        '4' => '#F59E0B',  // Tabaco - Naranja
+        '5' => '#EC4899',  // Cocaína - Rosa
+        '6' => '#FBBF24',  // PBC - Amarillo
+        '7' => '#A855F7',  // LSD - Púrpura
+        '8' => '#3B82F6',  // Clonazepam - Azul
+        '9' => '#6B7280'   // Otros - Gris
+    ];
+
+    // Colores para fases
+    const COLORES_FASES = [
+        'experimental' => '#9CA3AF',
+        'social' => '#3B82F6',
+        'habitual' => '#F59E0B',
+        'adicto' => '#EF4444'
+    ];
+
+    // Posición Y para cada fase (usado en gráficos)
+    const POSICION_FASES = [
+        'experimental' => 0,
+        'social' => 1,
+        'habitual' => 2,
+        'adicto' => 3
+    ];
+
     /**
      * Relación con historia psicológica
      */
@@ -65,5 +94,21 @@ class ConsumoSustancia extends Model
     public function getNombreFaseAttribute()
     {
         return self::FASES[$this->fase_consumo] ?? $this->fase_consumo;
+    }
+
+    /**
+     * Obtener el color de la droga
+     */
+    public function getColorDrogaAttribute()
+    {
+        return self::COLORES_DROGAS[$this->tipo_droga] ?? '#6B7280';
+    }
+
+    /**
+     * Obtener el color de la fase
+     */
+    public function getColorFaseAttribute()
+    {
+        return self::COLORES_FASES[$this->fase_consumo] ?? '#9CA3AF';
     }
 }

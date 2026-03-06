@@ -46,14 +46,14 @@
     @endif
 
     <div class="actions">
-        <a href="{{ route('intervenciones.create', $consultante) }}" class="btn btn-primary">
+        {{-- <a href="{{ route('intervenciones.create', $consultante) }}" class="btn btn-primary">
             ➕ Nueva Intervención
-        </a>
+        </a> --}}
         <a href="{{ route('consultantes.edit', $consultante) }}" class="btn btn-secondary">
             ✏️ Editar Consultante
         </a>
-        <form action="{{ route('consultantes.destroy', $consultante) }}" method="POST" style="display: inline;" 
-              onsubmit="return confirm('¿Está seguro de eliminar este consultante? Se eliminarán todas sus intervenciones.');">
+        <form action="{{ route('consultantes.destroy', $consultante) }}" method="POST" style="display: inline;"
+            onsubmit="return confirm('¿Está seguro de eliminar este consultante? Se eliminarán todas sus intervenciones.');">
             @csrf
             @method('DELETE')
             <button type="submit" class="btn btn-danger">🗑️ Eliminar</button>
@@ -68,51 +68,56 @@
     </div>
 
     @if($consultante->intervenciones->isEmpty())
-        <p style="text-align: center; padding: 2rem; color: #999;">
-            No hay intervenciones registradas.
-            <a href="{{ route('intervenciones.create', $consultante) }}" style="color: #667eea;">
-                ¡Registra la primera sesión!
-            </a>
+    <div style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+        <p style="font-size: 1.1rem; margin-bottom: 1rem;">
+            📝 No hay intervenciones registradas
         </p>
+        <p style="margin-bottom: 1.5rem;">
+            Registra la primera sesión de intervención
+        </p>
+        {{-- <a href="{{ route('intervenciones.create', $consultante) }}" class="btn btn-primary">
+            ➕ Registrar Primera Interversión
+        </a> --}}
+    </div>
     @else
-        <table>
-            <thead>
-                <tr>
-                    <th>N° Sesión</th>
-                    <th>Fecha</th>
-                    <th>Asistidos</th>
-                    <th>Actividades</th>
-                    <th>Terapeuta</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($consultante->intervenciones->sortBy('numero_sesion') as $intervencion)
-                <tr>
-                    <td>
-                        <strong style="color: #667eea;">{{ $intervencion->numero_sesion }}</strong>
-                    </td>
-                    <td>{{ $intervencion->fecha->format('d/m/Y') }}</td>
-                    <td>{{ $intervencion->asistidos }}</td>
-                    <td style="max-width: 300px;">{{ Str::limit($intervencion->actividades, 100) }}</td>
-                    <td>{{ $intervencion->terapeuta }}</td>
-                    <td>
-                        <div class="actions">
-                            <a href="{{ route('intervenciones.edit', $intervencion) }}" class="btn btn-secondary btn-sm">
-                                Editar
-                            </a>
-                            <form action="{{ route('intervenciones.destroy', $intervencion) }}" method="POST" 
-                                  style="display: inline;" onsubmit="return confirm('¿Eliminar esta intervención?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+    <table>
+        <thead>
+            <tr>
+                <th>N° Sesión</th>
+                <th>Fecha</th>
+                <th>Asistidos</th>
+                <th>Actividades</th>
+                <th>Terapeuta</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($consultante->intervenciones->sortBy('numero_sesion') as $intervencion)
+            <tr>
+                <td>
+                    <strong style="color: #667eea;">{{ $intervencion->numero_sesion }}</strong>
+                </td>
+                <td>{{ $intervencion->fecha->format('d/m/Y') }}</td>
+                <td>{{ $intervencion->asistidos }}</td>
+                <td style="max-width: 300px;">{{ Str::limit($intervencion->actividades, 100) }}</td>
+                <td>{{ $intervencion->terapeuta }}</td>
+                <td>
+                    <div class="actions">
+                        <a href="{{ route('intervenciones.edit', $intervencion) }}" class="btn btn-secondary btn-sm">
+                            Editar
+                        </a>
+                        <form action="{{ route('intervenciones.destroy', $intervencion) }}" method="POST"
+                            style="display: inline;" onsubmit="return confirm('¿Eliminar esta intervención?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
     @endif
 </div>
 @endsection
